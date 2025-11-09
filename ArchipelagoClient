@@ -1,0 +1,411 @@
+using FishNet;
+using FishNet.Object.Helping;
+using HarmonyLib;
+using MelonLoader;
+using ScheduleOne;
+using ScheduleOne.Casino;
+using ScheduleOne.Combat;
+using ScheduleOne.DevUtilities;
+using ScheduleOne.Dialogue;
+using ScheduleOne.Economy;
+using ScheduleOne.Interaction;
+using ScheduleOne.Money;
+using ScheduleOne.NPCs;
+using ScheduleOne.Persistence;
+using ScheduleOne.PlayerScripts;
+using ScheduleOne.Product;
+using ScheduleOne.Property;
+using ScheduleOne.UI;
+using ScheduleOne.UI.ATM;
+using ScheduleOne.UI.MainMenu;
+using ScheduleOne.Vision;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+using GameConsole = ScheduleOne.Console;
+
+[assembly: MelonInfo(typeof(Archipelago.Archipelago), "ScheduleOneArchipelago", "0.1.0", "Papacester")]
+[assembly: MelonGame("TVGS", "Schedule I")]
+
+namespace Archipelago
+{
+    public class Archipelago : MelonMod
+    {
+        public override void OnApplicationStart()
+        {
+            LoggerInstance.Msg($"ScheduleOneArchipelago v{Info.Version} loaded!");
+            LoggerInstance.Msg("By Papacester and TheGreatishJ");
+            HarmonyInstance.PatchAll();
+        }
+    }
+
+    [HarmonyPatch(typeof(SetupScreen), "StartGame")] // Replace with actual class name
+    public class ModNewGameResetPatch
+    {
+        static void Prefix(object __instance)
+        {
+            // Use reflection to get the slotIndex field
+            var slotIndexField = AccessTools.Field(__instance.GetType(), "slotIndex");
+            if (slotIndexField == null)
+            {
+                MelonLogger.Warning("[ModNewGameResetPatch] Could not find 'slotIndex' field.");
+                return;
+            }
+
+            int slotIndex = (int)slotIndexField.GetValue(__instance);
+            string basePath = Singleton<SaveManager>.Instance.IndividualSavesContainerPath;
+            string newSaveFolder = Path.Combine(basePath, $"SaveGame_{slotIndex + 1}");
+            string key = "Mod_PropertyState_" + newSaveFolder;
+
+            // Reset flags
+            SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = false;
+            SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = false;
+
+            // Clear mod state
+            if (PlayerPrefs.HasKey(key))
+            {
+                PlayerPrefs.DeleteKey(key);
+                MelonLogger.Msg($"[ModNewGameResetPatch] Cleared old mod state for: {newSaveFolder}");
+            }
+
+            MelonLogger.Msg($"[ModNewGameResetPatch] New game started in slot {slotIndex + 1}. Mod flags reset.");
+        }
+    }
+
+
+
+
+    [HarmonyPatch(typeof(GameManager), "Start")]
+    public class ModApplyPatch
+    {
+        static void Prefix()
+        {
+            string saveFolderPath = Singleton<LoadManager>.Instance.LoadedGameFolderPath;
+            string key = "Mod_PropertyState_" + saveFolderPath;
+
+            if (PlayerPrefs.HasKey(key))
+            {
+                var json = PlayerPrefs.GetString(key);
+                var state = JsonUtility.FromJson<PropertyPurchaseState>(json);
+
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = state.MotelRoomPurchased;
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = state.SweatshopPurchased;
+
+                MelonLogger.Msg($"[ModApplyPatch] Applied mod state after game start.");
+            }
+        }
+    }
+
+
+    [HarmonyPatch(typeof(SaveManager), "Save", new[] {typeof(string)})]
+    public class ModSavePatch
+    {
+        static void Prefix(string saveFolderPath)
+        {
+            var state = new PropertyPurchaseState
+            {
+                MotelRoomPurchased = SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom,
+                SweatshopPurchased = SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop
+            };
+
+            string json = JsonUtility.ToJson(state);
+            PlayerPrefs.SetString("Mod_PropertyState_" + saveFolderPath, json);
+            PlayerPrefs.Save();
+
+            MelonLogger.Msg($"[ModSavePatch] Saved mod state for: {saveFolderPath}");
+            MelonLogger.Msg($"[ModSavePatch] Saving: Motel={SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom}, Sweatshop={SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop}");
+
+        }
+    }
+
+
+    [HarmonyPatch(typeof(LoadManager), "TryLoadSaveInfo")]
+    public class ModLoadPatch
+    {
+        static void Postfix(string saveFolderPath, int saveSlotIndex, ref SaveInfo saveInfo)
+        {
+            string key = "Mod_PropertyState_" + saveFolderPath;
+            if (PlayerPrefs.HasKey(key))
+            {
+                string json = PlayerPrefs.GetString(key);
+                var state = JsonUtility.FromJson<PropertyPurchaseState>(json);
+
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = state.MotelRoomPurchased;
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = state.SweatshopPurchased;
+
+                MelonLogger.Msg($"[ModLoadPatch] Loaded mod state for: {saveFolderPath}");
+                MelonLogger.Msg($"[ModLoadPatch] Found mod state: {PlayerPrefs.GetString(key)}");
+                MelonLogger.Msg($"[ModLoadPatch] Loaded: Motel={state.MotelRoomPurchased}, Sweatshop={state.SweatshopPurchased}");
+
+            }
+            else
+            {
+                MelonLogger.Msg($"[ModLoadPatch] No mod state found for: {saveFolderPath}. Using defaults.");
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = false;
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = false;
+            }
+        }
+    }
+
+    [Serializable]
+    public class PropertyPurchaseState
+    {
+        public bool MotelRoomPurchased = false;
+        public bool SweatshopPurchased = false;
+    }
+
+
+    [HarmonyPatch(typeof(DialogueController_Ming), "CanBuyRoom")]
+    public class SweatshopAndMotelRoomCanBuy
+    {
+        public static bool alreadypurchasedMotelRoom = false;
+        public static bool alreadypurchasedSweatShop = false;
+
+        static bool Prefix(DialogueController_Ming __instance, bool enabled, ref bool __result)
+        {
+            var propertyField = AccessTools.Field(typeof(DialogueController_Ming), "Property");
+            var property = propertyField.GetValue(__instance) as Property;
+
+            if (property == null)
+            {
+                MelonLogger.Warning("[CanBuyRoom] Property field is null.");
+                return true; // fallback to original logic
+            }
+
+            if (property.name == "MotelRoom" && alreadypurchasedMotelRoom)
+            {
+                __result = false;
+                return false; // skip original method
+            }
+
+            if (property.name == "Sweatshop" && alreadypurchasedSweatShop)
+            {
+                __result = false;
+                return false; // skip original method
+            }
+
+            //Override: allow purchase regardless of quest state
+            __result = true;
+            return false; // skip original method
+        }
+    }
+
+
+    //prevents owning the sweatshop and motel room through normal means
+
+    [HarmonyPatch(typeof(DialogueController_Ming), "ChoiceCallback")]
+    public class SweatshopAndMotelRoom
+    {
+
+        static bool alreadyloggedMotelRoom = false;
+        static bool alreadyloggedSweatShop = false;
+        static bool Prefix(DialogueController_Ming __instance, string choiceLabel)
+        {
+            if (choiceLabel != "CHOICE_CONFIRM")
+                return true; // Let original method run
+
+            // Access protected npc field
+            var npcField = AccessTools.Field(typeof(DialogueController_Ming), "npc");
+            var npc = npcField.GetValue(__instance) as NPC;
+
+            var propertyField = AccessTools.Field(typeof(DialogueController_Ming), "Property");
+            var property = propertyField.GetValue(__instance) as Property; 
+
+            // Execute logic
+            NetworkSingleton<MoneyManager>.Instance.ChangeCashBalance(-__instance.Price, true, false);
+            npc?.Inventory.InsertItem(NetworkSingleton<MoneyManager>.Instance.GetCashInstance(__instance.Price), true);
+
+            __instance.onPurchase?.Invoke();
+            if (property.name == "MotelRoom")
+            {
+                if (!alreadyloggedMotelRoom)
+                {
+                    alreadyloggedMotelRoom = true;
+                    SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = true;
+                    MelonLogger.Msg("property.name == MotelRoom worked");
+                }
+
+            }
+            if (property.name == "Sweatshop")
+            {
+                if (!alreadyloggedSweatShop) {
+                    alreadyloggedSweatShop = true;
+                    SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = true;
+                    MelonLogger.Msg("property.name == Sweatshop worked");
+                }
+
+            }
+            MelonLogger.Msg("Blocked Ownership of " + property.name);
+            return false; // Skip original method
+        }
+    }
+
+
+
+    /* LOGS ALL COMPLETED DEALS */
+    [HarmonyPatch(typeof(Customer), "ContractWellReceived")]
+    public class ContractWellReceivedListener
+    {
+        static bool alreadyLoggedContracts = false;
+        static void Postfix(string npcToRecommend)
+        {
+            if (!alreadyLoggedContracts) {
+                MelonLogger.Msg($"Contract Well Received");
+                //ScheduleOne.Console.SubmitCommand(new List<string> { "teleport", "barn" });
+                alreadyLoggedContracts = true;
+                resetAlreadyLoggedContracts();
+            }
+            
+        }
+        static async void resetAlreadyLoggedContracts()
+        {
+            await Task.Delay(1000); // 1-second cooldown
+            alreadyLoggedContracts = false;
+        }
+        /* BLOCKS UNLOCKING OF DEALERS AND SUPPLIERS (EXCEPT FOR ALBERT THROUGH NELSON) */
+        static bool Prefix(string npcToRecommend)
+        {
+            var npc = NPCManager.GetNPC(npcToRecommend);
+            if (npc is Dealer || npc is Supplier)
+            {
+                MelonLogger.Msg($"Prevented unlocking of {npcToRecommend}");
+                return false; // Skip original method
+            }
+
+            return true; // Allow original method to run
+        }
+    }
+
+    //SLOT MACHINE LISTENER
+    [HarmonyPatch(typeof(SlotMachine), "GetWinAmount")]
+    public class Patch_GetWinAmount
+    {
+        // Track which SlotMachines have recently logged
+        static HashSet<int> recentlyLogged = new HashSet<int>();
+
+        static bool Prefix(SlotMachine.EOutcome outcome, int betAmount, SlotMachine __instance, ref int __result)
+        {
+            int id = __instance.GetInstanceID();
+            if (recentlyLogged.Contains(id))
+                return false;
+
+            switch (outcome)
+            {
+                case SlotMachine.EOutcome.Jackpot:
+                    __result = betAmount * 100;
+                    MelonLogger.Msg($"Jackpot! Payout: {__result}");
+                    break;
+                case SlotMachine.EOutcome.BigWin:
+                    __result = betAmount * 25;
+                    MelonLogger.Msg($"Big Win! Payout: {__result}");
+                    break;
+                case SlotMachine.EOutcome.SmallWin:
+                    __result = betAmount * 10;
+                    MelonLogger.Msg($"Small Win! Payout: {__result}");
+                    break;
+                case SlotMachine.EOutcome.MiniWin:
+                    __result = betAmount * 2;
+                    MelonLogger.Msg($"Mini Win! Payout: {__result}");
+                    break;
+                default:
+                    __result = 0;
+                    MelonLogger.Msg($"No win. Outcome: {outcome}");
+                    break;
+            }
+
+            recentlyLogged.Add(id);
+            ResetLogFlagAsync(id);
+            return false;
+        }
+
+        static async void ResetLogFlagAsync(int id)
+        {
+            await Task.Delay(1000); // 1-second cooldown
+            recentlyLogged.Remove(id);
+        }
+    }
+
+
+    //BLACK JACK LISTENER
+    [HarmonyPatch(typeof(BlackjackGameController), "GetPayout")]
+    public class Patch_BlackJackListener
+    {
+        static HashSet<BlackjackGameController.EPayoutType> loggedPayouts = new HashSet<BlackjackGameController.EPayoutType>();
+
+        static bool Prefix(float bet, BlackjackGameController.EPayoutType payout, ref float __result)
+        {
+            if (loggedPayouts.Contains(payout))
+                return false;
+
+            switch (payout)
+            {
+                case BlackjackGameController.EPayoutType.Blackjack:
+                    __result = bet * 2.5f;
+                    MelonLogger.Msg("Blackjack!");
+                    break;
+                case BlackjackGameController.EPayoutType.Win:
+                    __result = bet * 2f;
+                    MelonLogger.Msg("Win!");
+                    break;
+                case BlackjackGameController.EPayoutType.Push:
+                    __result = bet;
+                    MelonLogger.Msg("Push.");
+                    break;
+                default:
+                    __result = 0f;
+                    MelonLogger.Msg("No win.");
+                    break;
+            }
+
+            loggedPayouts.Add(payout);
+            ClearLoggedPayoutsAsync();
+            return false;
+        }
+
+        static async void ClearLoggedPayoutsAsync()
+        {
+            await Task.Delay(1000); // Reset after 1 second
+            loggedPayouts.Clear();
+        }
+
+    }
+
+    [HarmonyPatch(typeof(ATM), "Impacted")]
+    public class ATM_impacted_Patch
+    {
+        public static HashSet<int> loggedATMs = new HashSet<int>();
+        static void Prefix(ATM __instance, Impact impact)
+        {
+            if (__instance.IsBroken)
+            {
+                return; 
+            }
+            if (impact.ImpactForce >= 165f || impact.ImpactType == EImpactType.Bullet)
+            {
+                int id = __instance.GetInstanceID();
+                if (!loggedATMs.Contains(id))
+                {
+                    loggedATMs.Add(id);
+                    MelonLogger.Msg($"ATM impacted with force {impact.ImpactForce} of type {impact.ImpactType}");
+                }
+            }
+        }
+
+    }
+    [HarmonyPatch(typeof(Player), "SleepStart")]
+    public class PlayerSleepStartPatch
+    {
+        static void Prefix()
+        {
+            MelonLogger.Msg("Player is going to sleep.");
+            ATM_impacted_Patch.loggedATMs.Clear();
+        }
+    }
+}
