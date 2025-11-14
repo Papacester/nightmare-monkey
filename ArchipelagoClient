@@ -1,7 +1,10 @@
+using Archipelago.UI;
 using FishNet;
 using FishNet.Object.Helping;
 using HarmonyLib;
+using JetBrains.Annotations;
 using MelonLoader;
+using MelonLoader.Utils;
 using ScheduleOne;
 using ScheduleOne.Casino;
 using ScheduleOne.Combat;
@@ -11,6 +14,7 @@ using ScheduleOne.Economy;
 using ScheduleOne.Interaction;
 using ScheduleOne.Money;
 using ScheduleOne.NPCs;
+using ScheduleOne.NPCs.Relation;
 using ScheduleOne.Persistence;
 using ScheduleOne.PlayerScripts;
 using ScheduleOne.Product;
@@ -29,6 +33,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using GameConsole = ScheduleOne.Console;
 
 [assembly: MelonInfo(typeof(Archipelago.Archipelago), "ScheduleOneArchipelago", "0.1.0", "Papacester")]
@@ -41,46 +46,123 @@ namespace Archipelago
         public override void OnApplicationStart()
         {
             LoggerInstance.Msg($"ScheduleOneArchipelago v{Info.Version} loaded!");
-            LoggerInstance.Msg("By Papacester and TheGreatishJ");
+            LoggerInstance.Msg("By Papacester");
+            /*
+            string bundlePath = Path.Combine("Mods", "Archipelago", "UnityBundles", "schedule1_uiap");
+            AssetBundle bundle = AssetBundle.LoadFromFile(bundlePath);
+            if (bundle == null)
+            {
+                LoggerInstance.Msg("Failed to load AssetBundle!");
+                return;
+            }
+            */
             HarmonyInstance.PatchAll();
+
+            var harmony = new HarmonyLib.Harmony("com.papacester.scheduleonearchipelago");
+            
+            var original = AccessTools.Method(typeof(LoadManager), "TryLoadSaveInfo", new[]
+            {
+                typeof(string),
+                typeof(int),
+                typeof(SaveInfo).MakeByRefType(),
+                typeof(bool)
+
+            });
+
+            var postfix = AccessTools.Method(typeof(ModEarlyLoadPatch), "Postfix");
+
+            harmony.Patch(original, postfix: new HarmonyMethod(postfix));
+
         }
     }
+
+    public static class Schedule1PanelManager
+    {
+        public static GameObject PanelInstance;
+        public static Text StatusText;
+    }
+
+
+    [HarmonyPatch(typeof(ScheduleOne.UI.MainMenu.MainMenuScreen), "Awake")]
+    public class MainMenuScreen_Awake_Patch
+    {
+        static void Postfix(ScheduleOne.UI.MainMenu.MainMenuScreen __instance)
+        {
+            if (Schedule1PanelManager.PanelInstance != null)
+                return;
+
+            GameObject panel = Schedule1PanelBuilder.CreatePanel(__instance.transform);
+            Schedule1PanelManager.PanelInstance = panel;
+            panel.SetActive(false);
+        }
+    }
+
+
+    [HarmonyPatch(typeof(ScheduleOne.UI.MainMenu.MainMenuScreen), "Open")]
+    public class MainMenuScreen_Open_Patch
+    {
+        static void Postfix(ScheduleOne.UI.MainMenu.MainMenuScreen __instance)
+        {
+            if (Schedule1PanelManager.PanelInstance != null)
+            {
+                Schedule1PanelManager.PanelInstance.SetActive(true);
+                Schedule1PanelManager.PanelInstance.transform.SetAsLastSibling();
+                MelonLogger.Msg("Reactivating Schedule1Panel");
+            }
+        }
+    }
+
+
+    [HarmonyPatch(typeof(ScheduleOne.UI.MainMenu.MainMenuScreen), "Close")]
+    public class MainMenuScreen_Close_Patch
+    {
+        static void Postfix(ScheduleOne.UI.MainMenu.MainMenuScreen __instance)
+        {
+            if (Schedule1PanelManager.PanelInstance != null)
+            {
+                Schedule1PanelManager.PanelInstance.SetActive(false);
+                MelonLogger.Msg("Hiding Schedule1Panel");
+            }
+        }
+    }
+
+
 
     [HarmonyPatch(typeof(SetupScreen), "StartGame")] // Replace with actual class name
     public class ModNewGameResetPatch
     {
         static void Prefix(object __instance)
         {
-            // Use reflection to get the slotIndex field
             var slotIndexField = AccessTools.Field(__instance.GetType(), "slotIndex");
-            if (slotIndexField == null)
+            var defaultUnlockedCustomers = new List<string>
             {
-                MelonLogger.Warning("[ModNewGameResetPatch] Could not find 'slotIndex' field.");
-                return;
-            }
-
+                "Kyle",
+                "Austin",
+                "Kathy",
+                "Mick",
+                "Sam",
+                "Jessi"
+            };
             int slotIndex = (int)slotIndexField.GetValue(__instance);
+
             string basePath = Singleton<SaveManager>.Instance.IndividualSavesContainerPath;
             string newSaveFolder = Path.Combine(basePath, $"SaveGame_{slotIndex + 1}");
             string key = "Mod_PropertyState_" + newSaveFolder;
 
-            // Reset flags
-            SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = false;
-            SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = false;
+            PropertyPurchaseTracker.Purchased.Clear();
+            PlayerPrefs.DeleteKey(key);
 
-            // Clear mod state
-            if (PlayerPrefs.HasKey(key))
+            CustomerUnlockTracker.ResetAll();
+
+
+            foreach (var name in defaultUnlockedCustomers)
             {
-                PlayerPrefs.DeleteKey(key);
-                MelonLogger.Msg($"[ModNewGameResetPatch] Cleared old mod state for: {newSaveFolder}");
+                CustomerUnlockTracker.SetUnlocked(name, true);
             }
 
             MelonLogger.Msg($"[ModNewGameResetPatch] New game started in slot {slotIndex + 1}. Mod flags reset.");
         }
     }
-
-
-
 
     [HarmonyPatch(typeof(GameManager), "Start")]
     public class ModApplyPatch
@@ -93,41 +175,52 @@ namespace Archipelago
             if (PlayerPrefs.HasKey(key))
             {
                 var json = PlayerPrefs.GetString(key);
-                var state = JsonUtility.FromJson<PropertyPurchaseState>(json);
+                var state = JsonUtility.FromJson<SavedModState>(json);
 
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = state.MotelRoomPurchased;
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = state.SweatshopPurchased;
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = PropertyPurchaseTracker.IsPurchased("MotelRoom");
+                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = PropertyPurchaseTracker.IsPurchased("Sweatshop");
 
                 MelonLogger.Msg($"[ModApplyPatch] Applied mod state after game start.");
+
+                MelonLogger.Msg($"[ModApplyPatch] Restored {state.UnlockedCustomers.Count} unlocked customers.");
             }
         }
     }
 
 
-    [HarmonyPatch(typeof(SaveManager), "Save", new[] {typeof(string)})]
+    [HarmonyPatch(typeof(SaveManager), "Save", new[] { typeof(string) })]
     public class ModSavePatch
     {
         static void Prefix(string saveFolderPath)
         {
-            var state = new PropertyPurchaseState
+            var state = new SavedModState
             {
-                MotelRoomPurchased = SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom,
-                SweatshopPurchased = SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop
+                PurchasedCodes = PropertyPurchaseTracker.Purchased
+                    .Where(kvp => kvp.Value)
+                    .Select(kvp => kvp.Key)
+                    .ToList(),
+
+                UnlockedCustomers = CustomerUnlockTracker.Unlocked
+                    .Where(kvp => kvp.Value)
+                    .Select(kvp => kvp.Key)
+                    .ToList()
+
             };
 
             string json = JsonUtility.ToJson(state);
-            PlayerPrefs.SetString("Mod_PropertyState_" + saveFolderPath, json);
+            string key = "Mod_PropertyState_" + saveFolderPath;
+            PlayerPrefs.SetString(key, json);
             PlayerPrefs.Save();
 
             MelonLogger.Msg($"[ModSavePatch] Saved mod state for: {saveFolderPath}");
-            MelonLogger.Msg($"[ModSavePatch] Saving: Motel={SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom}, Sweatshop={SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop}");
+            MelonLogger.Msg($"[ModSavePatch] Purchased codes being saved: {string.Join(", ", state.PurchasedCodes)}");
 
         }
     }
 
 
     [HarmonyPatch(typeof(LoadManager), "TryLoadSaveInfo")]
-    public class ModLoadPatch
+    public class ModEarlyLoadPatch
     {
         static void Postfix(string saveFolderPath, int saveSlotIndex, ref SaveInfo saveInfo)
         {
@@ -135,30 +228,67 @@ namespace Archipelago
             if (PlayerPrefs.HasKey(key))
             {
                 string json = PlayerPrefs.GetString(key);
-                var state = JsonUtility.FromJson<PropertyPurchaseState>(json);
+                var state = JsonUtility.FromJson<SavedModState>(json);
 
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = state.MotelRoomPurchased;
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = state.SweatshopPurchased;
+                PropertyPurchaseTracker.Purchased.Clear();
+                foreach (var code in state.PurchasedCodes)
+                    PropertyPurchaseTracker.SetPurchased(code, true);
 
-                MelonLogger.Msg($"[ModLoadPatch] Loaded mod state for: {saveFolderPath}");
-                MelonLogger.Msg($"[ModLoadPatch] Found mod state: {PlayerPrefs.GetString(key)}");
-                MelonLogger.Msg($"[ModLoadPatch] Loaded: Motel={state.MotelRoomPurchased}, Sweatshop={state.SweatshopPurchased}");
+                foreach (var name in state.UnlockedCustomers)
+                    CustomerUnlockTracker.SetUnlocked(name, true);
 
-            }
-            else
-            {
-                MelonLogger.Msg($"[ModLoadPatch] No mod state found for: {saveFolderPath}. Using defaults.");
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = false;
-                SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = false;
+                MelonLogger.Msg($"[ModEarlyLoadPatch] Restored purchase state early for: {saveFolderPath}");
+
+                MelonLogger.Msg($"[ModEarlyLoadPatch] Restored {state.UnlockedCustomers.Count} unlocked customers.");
             }
         }
     }
 
     [Serializable]
-    public class PropertyPurchaseState
+    public class SavedModState
     {
-        public bool MotelRoomPurchased = false;
-        public bool SweatshopPurchased = false;
+        public int Version = 1;
+        public List<string> PurchasedCodes = new List<string>();
+        public List<string> UnlockedCustomers = new List<string>();
+    }
+
+
+    [HarmonyPatch(typeof(NPCRelationData), "Unlock")]
+    public class Patch_NPCRelationData_Unlock
+    {
+        static bool Prefix(NPCRelationData __instance, NPCRelationData.EUnlockType type, bool notify)
+        {
+            string customerName = __instance.NPC?.name ?? "Unknown";
+
+            if (CustomerUnlockTracker.IsUnlocked(customerName))
+            {
+                MelonLogger.Msg($"[Unlock Allowed] Proceeding with unlock for: {customerName}");
+                return true; // Allow unlock
+            }
+
+            MelonLogger.Msg($"[Unlock Blocked] {customerName} is not approved by mod — skipping unlock.");
+            return false; // Block unlock
+        }
+    }
+
+    //To unlock new customers:
+    //CustomerUnlockTracker.SetUnlocked("FirstName", true);
+    //customer.RelationData.Unlock(NPCRelationData.EUnlockType.DirectApproach, true);
+
+    public static class ModUnlockControl
+    {
+        public static HashSet<string> AllowedUnlocks = new HashSet<string>();
+
+        public static void AllowUnlock(string customerName)
+        {
+            AllowedUnlocks.Add(customerName);
+            MelonLogger.Msg($"[Unlock Allowed] {customerName} added to allowlist.");
+        }
+
+        public static bool IsUnlockAllowed(string customerName)
+        {
+            return AllowedUnlocks.Contains(customerName);
+        }
     }
 
 
@@ -179,13 +309,13 @@ namespace Archipelago
                 return true; // fallback to original logic
             }
 
-            if (property.name == "MotelRoom" && alreadypurchasedMotelRoom)
+            if (property.name == "MotelRoom" && PropertyPurchaseTracker.IsPurchased("motelroom"))
             {
                 __result = false;
                 return false; // skip original method
             }
 
-            if (property.name == "Sweatshop" && alreadypurchasedSweatShop)
+            if (property.name == "Sweatshop" && PropertyPurchaseTracker.IsPurchased("sweatshop"))
             {
                 __result = false;
                 return false; // skip original method
@@ -196,7 +326,207 @@ namespace Archipelago
             return false; // skip original method
         }
     }
+    public static class CustomerUnlockTracker
+    {
+        public static Dictionary<string, bool> Unlocked = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+    {
+        //Northtown
+        { "Kyle", true },
+        { "Austin", true },
+        { "Kathy", true },
+        { "Mick", true },
+        { "Sam", true },
+        { "Jessi", true },
+        { "Peter", false },
+        { "Chloe", false },
+        { "Ludwig", false },
+        { "Mrs", false },
+        { "Geraldine", false },
+        { "Beth", false },
+        { "Peggy", false },
+        { "Donna", false },
+        //Westville
+        { "Trent", false }, 
+        { "Meg", false },
+        { "Joyce", false },
+        { "Keith", false },
+        { "Doris", false },
+        { "Jerry", false },
+        { "Kim", false },
+        { "Charles", false },
+        { "George", false },
+        { "Dean", false },
+        //Downtown
+        { "Jennifer", false},
+        { "Elizabeth", false },
+        { "Eugene", false },
+        { "Greg", false },
+        { "Jeff", false },
+        { "Kevin", false },
+        { "Louis", false },
+        { "Lucy", false },
+        { "Philip", false },
+        { "Randy", false },
+        //Docks
+        { "Anna", false},
+        { "Billy", false },
+        { "Cranky", false },
+        { "Genghis", false },
+        { "Javier", false },
+        { "Lisa", false },
+        { "Mac", false },
+        { "Marco", false },
+        { "Melissa", false },
+        //Suburbia
+        { "Chris", false},
+        { "Allison", false },
+        { "Carl", false },
+        { "Dennis", false },
+        { "Hank", false },
+        { "Harold", false },
+        { "Jack", false },
+        { "Jackie", false },
+        { "Jeremy", false },
+        { "Karen", false },
+        //Uptown
+        { "Lily", false },
+        { "Fiona", false },
+        { "Herbert", false },
+        { "Jen", false },
+        { "Michael", false },
+        { "Pearl", false },
+        { "Ray", false },
+        { "Tobas", false },
+        { "Walter", false }
 
+    };
+
+        public static bool IsUnlocked(string name)
+        {
+            return Unlocked.TryGetValue(name, out bool value) && value;
+        }
+
+        public static void SetUnlocked(string name, bool value)
+        {
+            if (!Unlocked.ContainsKey(name))
+            {
+                MelonLogger.Warning($"[CustomerUnlockTracker] Unknown customer: {name}");
+                return;
+            }
+
+            Unlocked[name] = value;
+            MelonLogger.Msg($"[CustomerUnlockTracker] SetUnlocked: {name} = {value}");
+        }
+
+        public static void ResetAll()
+        {
+            foreach (var key in Unlocked.Keys.ToList())
+            {
+                Unlocked[key] = false;
+            }
+
+            // Reapply default
+            Unlocked["Kyle"] = true;
+            Unlocked["Austin"] = true;
+            Unlocked["Kathy"] = true;
+            Unlocked["Mick"] = true;
+            Unlocked["Sam"] = true;
+            Unlocked["Jessi"] = true;
+
+            MelonLogger.Msg("[CustomerUnlockTracker] All unlocks reset. Jessi set to true by default.");
+        }
+    }
+
+    public static class PropertyPurchaseTracker
+    {
+        public static Dictionary<string, bool> Purchased = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+        {
+            {"MotelRoom", false },
+            {"Sweatshop", false},
+            {"StorageUnit", false },
+            {"Bungalow", false },
+            {"Barn", false },
+            {"DocksWarehouse", false },
+            {"Laundromat", false },
+            {"CarWash", false },
+            {"PostOffice", false },
+            {"TacoTicklers", false }
+        };
+
+        public static bool IsPurchased(string code)
+        {
+            return Purchased.TryGetValue(code, out bool value) && value;
+        }
+
+        public static void SetPurchased(string code, bool value)
+        {
+            Purchased[code] = value;
+            MelonLogger.Msg($"[PropertyPurchaseTracker] SetPurchased: {code} = {value}");
+        }
+    }
+
+    [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ShouldChoiceBeShown")]
+    public class ModShouldChoiceBeShownPatch
+    {
+        static bool Prefix(string choiceLabel, ref bool __result)
+        {
+            string normalized = choiceLabel.ToLowerInvariant();
+
+            // Check if the property or business is already purchased via mod logic
+            if (PropertyPurchaseTracker.IsPurchased(normalized))
+            {
+                __result = false;
+                MelonLogger.Msg($"[ModShouldChoiceBeShownPatch] Hiding purchased item: {normalized}");
+                return false; // Skip original method
+            }
+
+            // Optional: fallback to original logic if not tracked by mod
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "DialogueCallback")]
+    public class ModDialogueCallbackPatch
+    {
+        static bool Prefix(object __instance, string choiceLabel)
+        {
+            var selectedPropertyField = AccessTools.Field(__instance.GetType(), "selectedProperty");
+            var selectedBusinessField = AccessTools.Field(__instance.GetType(), "selectedBusiness");
+
+            var property = selectedPropertyField.GetValue(__instance) as Property;
+            var business = selectedBusinessField.GetValue(__instance) as Business;
+
+            if (choiceLabel == "CONFIRM_BUY" && property != null)
+            {
+                NetworkSingleton<MoneyManager>.Instance.CreateOnlineTransaction(
+                    property.PropertyName + " purchase",
+                    -property.Price,
+                    1f,
+                    string.Empty
+                );
+
+                PropertyPurchaseTracker.SetPurchased(property.PropertyCode, true);
+                MelonLogger.Msg($"[ModDialogueCallbackPatch] Marked property '{property.PropertyCode}' as purchased.");
+                return false; // Skip original method
+            }
+
+            if (choiceLabel == "CONFIRM_BUY_BUSINESS" && business != null)
+            {
+                NetworkSingleton<MoneyManager>.Instance.CreateOnlineTransaction(
+                    business.PropertyName + " purchase",
+                    -business.Price,
+                    1f,
+                    string.Empty
+                );
+
+                PropertyPurchaseTracker.SetPurchased(business.PropertyCode, true);
+                MelonLogger.Msg($"[ModDialogueCallbackPatch] Marked business '{business.PropertyCode}' as purchased.");
+                return false; // Skip original method
+            }
+
+            return true; // Let original method run for other choices
+        }
+    }
 
     //prevents owning the sweatshop and motel room through normal means
 
@@ -228,7 +558,7 @@ namespace Archipelago
                 if (!alreadyloggedMotelRoom)
                 {
                     alreadyloggedMotelRoom = true;
-                    SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = true;
+                    PropertyPurchaseTracker.SetPurchased("motelroom", true);
                     MelonLogger.Msg("property.name == MotelRoom worked");
                 }
 
@@ -237,7 +567,8 @@ namespace Archipelago
             {
                 if (!alreadyloggedSweatShop) {
                     alreadyloggedSweatShop = true;
-                    SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = true;
+                    PropertyPurchaseTracker.SetPurchased("sweatshop", true);
+
                     MelonLogger.Msg("property.name == Sweatshop worked");
                 }
 
@@ -247,7 +578,21 @@ namespace Archipelago
         }
     }
 
+    //UNLOCKING CUSTOMERS
+    public class UnlockingCustomers
+    {
+        public static void TryUnlockCustomer(string name, string name2, NPCRelationData.EUnlockType type)
+        {
+            CustomerUnlockTracker.SetUnlocked(name, true);
 
+            var npc = NPCManager.GetNPC(name2);
+            var relation = npc?.RelationData;
+
+            if (relation != null && !relation.Unlocked)
+                relation.Unlock(type);
+        }
+
+    }
 
     /* LOGS ALL COMPLETED DEALS */
     [HarmonyPatch(typeof(Customer), "ContractWellReceived")]
@@ -259,6 +604,8 @@ namespace Archipelago
             if (!alreadyLoggedContracts) {
                 MelonLogger.Msg($"Contract Well Received");
                 //ScheduleOne.Console.SubmitCommand(new List<string> { "teleport", "barn" });
+                //UnlockingCustomers.TryUnlockCustomer("Meg", "meg_cooley", NPCRelationData.EUnlockType.DirectApproach);
+                
                 alreadyLoggedContracts = true;
                 resetAlreadyLoggedContracts();
             }
