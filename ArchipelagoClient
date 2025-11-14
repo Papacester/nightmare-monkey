@@ -47,15 +47,7 @@ namespace Archipelago
         {
             LoggerInstance.Msg($"ScheduleOneArchipelago v{Info.Version} loaded!");
             LoggerInstance.Msg("By Papacester");
-            /*
-            string bundlePath = Path.Combine("Mods", "Archipelago", "UnityBundles", "schedule1_uiap");
-            AssetBundle bundle = AssetBundle.LoadFromFile(bundlePath);
-            if (bundle == null)
-            {
-                LoggerInstance.Msg("Failed to load AssetBundle!");
-                return;
-            }
-            */
+
             HarmonyInstance.PatchAll();
 
             var harmony = new HarmonyLib.Harmony("com.papacester.scheduleonearchipelago");
@@ -271,9 +263,6 @@ namespace Archipelago
         }
     }
 
-    //To unlock new customers:
-    //CustomerUnlockTracker.SetUnlocked("FirstName", true);
-    //customer.RelationData.Unlock(NPCRelationData.EUnlockType.DirectApproach, true);
 
     public static class ModUnlockControl
     {
@@ -593,6 +582,9 @@ namespace Archipelago
         }
 
     }
+    //Unlocking Example
+    //UnlockingCustomers.TryUnlockCustomer("Meg", "meg_cooley", NPCRelationData.EUnlockType.DirectApproach);
+
 
     /* LOGS ALL COMPLETED DEALS */
     [HarmonyPatch(typeof(Customer), "ContractWellReceived")]
@@ -603,8 +595,9 @@ namespace Archipelago
         {
             if (!alreadyLoggedContracts) {
                 MelonLogger.Msg($"Contract Well Received");
+                //This was testing the console commands.
                 //ScheduleOne.Console.SubmitCommand(new List<string> { "teleport", "barn" });
-                //UnlockingCustomers.TryUnlockCustomer("Meg", "meg_cooley", NPCRelationData.EUnlockType.DirectApproach);
+                
                 
                 alreadyLoggedContracts = true;
                 resetAlreadyLoggedContracts();
