@@ -2,7 +2,6 @@ using Archipelago.UI;
 using FishNet;
 using FishNet.Object.Helping;
 using HarmonyLib;
-using JetBrains.Annotations;
 using MelonLoader;
 using MelonLoader.Utils;
 using ScheduleOne;
@@ -11,7 +10,10 @@ using ScheduleOne.Combat;
 using ScheduleOne.DevUtilities;
 using ScheduleOne.Dialogue;
 using ScheduleOne.Economy;
+using ScheduleOne.GameTime;
 using ScheduleOne.Interaction;
+using ScheduleOne.ItemFramework;
+using ScheduleOne.Map;
 using ScheduleOne.Money;
 using ScheduleOne.NPCs;
 using ScheduleOne.NPCs.Relation;
@@ -19,9 +21,13 @@ using ScheduleOne.Persistence;
 using ScheduleOne.PlayerScripts;
 using ScheduleOne.Product;
 using ScheduleOne.Property;
+using ScheduleOne.StationFramework;
 using ScheduleOne.UI;
 using ScheduleOne.UI.ATM;
+using ScheduleOne.UI.Handover;
 using ScheduleOne.UI.MainMenu;
+using ScheduleOne.UI.Phone.ContactsApp;
+using ScheduleOne.UI.Phone.Map;
 using ScheduleOne.Vision;
 using System;
 using System.Collections.Generic;
@@ -33,6 +39,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 using GameConsole = ScheduleOne.Console;
 
@@ -145,6 +152,7 @@ namespace Archipelago
             PlayerPrefs.DeleteKey(key);
 
             CustomerUnlockTracker.ResetAll();
+            SampleTracker.ResetAll();
 
 
             foreach (var name in defaultUnlockedCustomers)
@@ -164,20 +172,46 @@ namespace Archipelago
             string saveFolderPath = Singleton<LoadManager>.Instance.LoadedGameFolderPath;
             string key = "Mod_PropertyState_" + saveFolderPath;
 
+            // Restore default property state
+            PropertyPurchaseTracker.RegisterDefaults();
+            MelonLogger.Msg($"[ModApplyPatch] Registered {PropertyPurchaseTracker.GetTrackedItems().Count()} mod-managed properties.");
+
+            // Reset sample tracker to static defaults (true for Kyle, etc.)
+            SampleTracker.ResetAll();
+            MelonLogger.Msg($"[ModApplyPatch] Reset sample tracker to default state with {SampleTracker.Given.Count} recipients.");
+
+            CustomerUnlockTracker.ResetAll();
+
             if (PlayerPrefs.HasKey(key))
             {
                 var json = PlayerPrefs.GetString(key);
                 var state = JsonUtility.FromJson<SavedModState>(json);
 
+                // Restore property state
                 SweatshopAndMotelRoomCanBuy.alreadypurchasedMotelRoom = PropertyPurchaseTracker.IsPurchased("MotelRoom");
                 SweatshopAndMotelRoomCanBuy.alreadypurchasedSweatShop = PropertyPurchaseTracker.IsPurchased("Sweatshop");
 
-                MelonLogger.Msg($"[ModApplyPatch] Applied mod state after game start.");
+                // Apply saved sample state (overwrites static defaults)
+                foreach (var name in state.SamplesGiven)
+                    SampleTracker.SetGiven(name, true);
+
+                MelonLogger.Msg($"[ModApplyPatch] Restored {state.SamplesGiven.Count} samples from save.");
+
+                // Restore customer unlocks
+                foreach (var name in state.UnlockedCustomers)
+                    CustomerUnlockTracker.SetUnlocked(name, true);
 
                 MelonLogger.Msg($"[ModApplyPatch] Restored {state.UnlockedCustomers.Count} unlocked customers.");
             }
+            else
+            {
+                MelonLogger.Msg("[ModApplyPatch] No saved mod state found — using default sample and unlock values.");
+            }
         }
     }
+
+
+
 
 
     [HarmonyPatch(typeof(SaveManager), "Save", new[] { typeof(string) })]
@@ -195,10 +229,16 @@ namespace Archipelago
                 UnlockedCustomers = CustomerUnlockTracker.Unlocked
                     .Where(kvp => kvp.Value)
                     .Select(kvp => kvp.Key)
+                    .ToList(),
+
+                SamplesGiven = SampleTracker.Given
+                    .Where(kvp => kvp.Value)
+                    .Select(kvp => kvp.Key)
                     .ToList()
 
-            };
 
+            };
+            MelonLogger.Msg($"[ModSavePatch] Saving {state.SamplesGiven.Count} samples.");
             string json = JsonUtility.ToJson(state);
             string key = "Mod_PropertyState_" + saveFolderPath;
             PlayerPrefs.SetString(key, json);
@@ -217,11 +257,19 @@ namespace Archipelago
         static void Postfix(string saveFolderPath, int saveSlotIndex, ref SaveInfo saveInfo)
         {
             string key = "Mod_PropertyState_" + saveFolderPath;
+
+            // Log current sample count (already statically initialized)
+            MelonLogger.Msg($"[ModEarlyLoadPatch] Sample tracker contains {SampleTracker.Given.Count} recipients.");
+
             if (PlayerPrefs.HasKey(key))
             {
+                
+                
                 string json = PlayerPrefs.GetString(key);
+                MelonLogger.Msg($"[ModApplyPatch] Raw JSON: {json}");
                 var state = JsonUtility.FromJson<SavedModState>(json);
 
+                // Restore property state early
                 PropertyPurchaseTracker.Purchased.Clear();
                 foreach (var code in state.PurchasedCodes)
                     PropertyPurchaseTracker.SetPurchased(code, true);
@@ -229,12 +277,26 @@ namespace Archipelago
                 foreach (var name in state.UnlockedCustomers)
                     CustomerUnlockTracker.SetUnlocked(name, true);
 
-                MelonLogger.Msg($"[ModEarlyLoadPatch] Restored purchase state early for: {saveFolderPath}");
+                // DO NOT restore samples here — let ModApplyPatch handle it
 
+                MelonLogger.Msg($"[PropertyPurchaseTracker] Tracked items: {string.Join(", ", PropertyPurchaseTracker.GetTrackedItems())}");
+                MelonLogger.Msg($"[ModEarlyLoadPatch] Restored purchase state early for: {saveFolderPath}");
                 MelonLogger.Msg($"[ModEarlyLoadPatch] Restored {state.UnlockedCustomers.Count} unlocked customers.");
             }
+
+            // Refresh PoI markers
+            var allCustomers = GameObject.FindObjectsOfType<Customer>();
+            foreach (var customer in allCustomers)
+            {
+                Patch_UpdatePotentialCustomerPoI.RefreshPoIMarker(customer);
+            }
+
+            MelonLogger.Msg("[ModEarlyLoadPatch] Refreshed PoI markers after loading saved sample state.");
         }
     }
+
+
+
 
     [Serializable]
     public class SavedModState
@@ -242,6 +304,391 @@ namespace Archipelago
         public int Version = 1;
         public List<string> PurchasedCodes = new List<string>();
         public List<string> UnlockedCustomers = new List<string>();
+        public List<string> SamplesGiven = new List<string>();
+
+    }
+
+    public static class SampleTracker
+    {
+        public static Dictionary<string, bool> Given = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+    {
+         //Northtown
+        { "Kyle", true },
+        { "Austin", true },
+        { "Kathy", true },
+        { "Mick", true },
+        { "Sam", true },
+        { "Jessi", true },
+        { "Peter", false },
+        { "Chloe", false },
+        { "Ludwig", false },
+        { "Mrs.", false },
+        { "Geraldine", false },
+        { "Beth", false },
+        { "Peggy", false },
+        { "Donna", false },
+        //Westville
+        { "Trent", false },
+        { "Meg", false },
+        { "Joyce", false },
+        { "Keith", false },
+        { "Doris", false },
+        { "Jerry", false },
+        { "Kim", false },
+        { "Charles", false },
+        { "George", false },
+        { "Dean", false },
+        //Downtown
+        { "Jennifer", false},
+        { "Elizabeth", false },
+        { "Eugene", false },
+        { "Greg", false },
+        { "Jeff", false },
+        { "Kevin", false },
+        { "Louis", false },
+        { "Lucy", false },
+        { "Philip", false },
+        { "Randy", false },
+        //Docks
+        { "Anna", false},
+        { "Billy", false },
+        { "Cranky Frank", false },
+        { "Genghis", false },
+        { "Javier", false },
+        { "Lisa", false },
+        { "Mac", false },
+        { "Marco", false },
+        { "Melissa", false },
+        //Suburbia
+        { "Chris", false},
+        { "Allison", false },
+        { "Carl", false },
+        { "Dennis", false },
+        { "Hank", false },
+        { "Harold", false },
+        { "Jack", false },
+        { "Jackie", false },
+        { "Jeremy", false },
+        { "Karen", false },
+        //Uptown
+        { "Lily", false },
+        { "Fiona", false },
+        { "Herbert", false },
+        { "Jen", false },
+        { "Michael", false },
+        { "Pearl", false },
+        { "Ray", false },
+        { "Tobas", false },
+        { "Walter", false }
+    };
+        private static readonly HashSet<string> DefaultGiven = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Kyle", "Austin", "Kathy", "Mick", "Sam", "Jessi"
+        };
+
+        public static bool HasGiven(string name)
+        {
+            return Given.TryGetValue(name, out bool value) && value;
+        }
+
+        public static void SetGiven(string name, bool value, Customer customer = null)
+        {
+
+            if (!Given.ContainsKey(name))
+            {
+                MelonLogger.Warning($"[SampleTracker] Unknown recipient: {name}");
+                return;
+            }
+
+            Given[name] = value;
+            MelonLogger.Msg($"[SampleTracker] SetGiven: {name} = {value}");
+
+            // Only update marker if customer reference is provided
+            if (customer != null)
+            {
+                var method = AccessTools.Method(customer.GetType(), "UpdatePotentialCustomerPoI");
+                if (method != null)
+                {
+                    try
+                    {
+                        method.Invoke(customer, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        MelonLogger.Warning($"[SampleTracker] Failed to update marker for {customer.name}: {ex.Message}");
+                    }
+                }
+            }
+
+        }
+
+
+        public static void ResetAll()
+        {
+            foreach (var key in Given.Keys.ToList())
+            {
+                Given[key] = DefaultGiven.Contains(key);
+            }
+
+            MelonLogger.Msg("[SampleTracker] All sample flags reset (preserved default-true recipients).");
+        }
+
+
+        public static void RegisterDefaults(IEnumerable<string> allCustomerNames)
+        {
+            foreach (var name in allCustomerNames)
+            {
+                if (!Given.ContainsKey(name))
+                {
+                    Given[name] = false;
+                    MelonLogger.Msg($"[SampleTracker] Registered: {name}");
+                }
+            }
+        }
+    }
+
+
+    public static class CustomerKey
+    {
+        public static string Get(Customer c)
+        {
+            var npc = c?.NPC;
+            return npc?.FirstName ?? c?.name ?? "Unknown";
+        }
+    }
+
+
+    [HarmonyPatch(typeof(Customer), "SampleOptionValid")]
+    public class SampleOptionValidPatch
+    {
+        // Prefix runs before the original method
+        static bool Prefix(Customer __instance, out string invalidReason, ref bool __result)
+        {
+            string key = CustomerKey.Get(__instance);
+            bool regionUnlocked = RegionUtils.IsCustomerRegionUnlocked(__instance);
+            bool relationUnlocked = __instance.NPC?.RelationData?.Unlocked ?? false;
+            bool hasSample = SampleTracker.HasGiven(key);
+
+            MelonLogger.Msg(
+                $"[SampleOptionValid.Prefix] {key} region={regionUnlocked} relation={relationUnlocked} hasSample={hasSample}"
+            );
+
+            // If already sampled, block immediately
+            if (hasSample)
+            {
+                invalidReason = "Sample already succeeded";
+                __result = false;
+                MelonLogger.Msg($"[SampleOptionValid.Prefix] {key} already sampled — blocking and skipping original.");
+                return false; // skip original
+            }
+
+            // Otherwise let original run
+            invalidReason = string.Empty;
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Customer), "SetUpDialogue")]
+    public class Patch_SetUpDialogue
+    {
+        // Simple debug toggle
+        private static bool DebugEnabled = true;
+
+        static void Postfix(Customer __instance)
+        {
+            var sampleChoiceField = AccessTools.Field(typeof(Customer), "sampleChoice");
+            var sampleChoice = (DialogueController.DialogueChoice)sampleChoiceField.GetValue(__instance);
+
+            // Keep references to the original delegates so we can fall back to vanilla behavior
+            var origShow = sampleChoice.shouldShowCheck;
+            var origValid = sampleChoice.isValidCheck;
+
+            // Track last results to avoid log spam
+            bool lastShowResult = false;
+            bool lastValidResult = false;
+
+            // Wrap shouldShowCheck: signature is (bool) -> bool
+            sampleChoice.shouldShowCheck = new DialogueController.DialogueChoice.ShouldShowCheck(
+                (bool arg) =>
+                {
+                    string key = CustomerKey.Get(__instance);
+                    bool relationUnlocked = __instance.NPC?.RelationData?.Unlocked ?? false;
+
+                    bool result = relationUnlocked || (origShow != null && (bool)origShow.DynamicInvoke(arg));
+
+                    if (DebugEnabled && result != lastShowResult)
+                    {
+                        MelonLogger.Msg($"[SampleChoice.ShowCheck] {key} changed: {lastShowResult} -> {result} (relationUnlocked={relationUnlocked})");
+                        lastShowResult = result;
+                    }
+
+                    return result;
+                }
+            );
+
+            // Wrap isValidCheck: signature is (out string invalidReason) -> bool
+            sampleChoice.isValidCheck = new DialogueController.DialogueChoice.IsChoiceValid(
+                (out string invalidReason) =>
+                {
+                    string key = CustomerKey.Get(__instance);
+                    bool relationUnlocked = __instance.NPC?.RelationData?.Unlocked ?? false;
+                    bool hasSample = SampleTracker.HasGiven(key);
+
+                    bool result;
+                    if (relationUnlocked && !hasSample)
+                    {
+                        invalidReason = string.Empty;
+                        result = true;
+                    }
+                    else
+                    {
+                        object[] args = new object[] { null };
+                        result = origValid != null && (bool)origValid.DynamicInvoke(args);
+                        invalidReason = (string)args[0] ?? string.Empty;
+                    }
+
+                    if (DebugEnabled && result != lastValidResult)
+                    {
+                        MelonLogger.Msg($"[SampleChoice.ValidCheck] {key} changed: {lastValidResult} -> {result} (relationUnlocked={relationUnlocked}, hasSample={hasSample}, reason={invalidReason})");
+                        lastValidResult = result;
+                    }
+
+                    return result;
+                }
+            );
+
+            if (DebugEnabled)
+                MelonLogger.Msg($"[Patch_SetUpDialogue] Rewired sampleChoice checks for {CustomerKey.Get(__instance)}");
+        }
+    }
+
+    public static class CustomerUnlockTracker
+    {
+        // Current runtime state
+        public static Dictionary<string, bool> Unlocked = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
+        // Baseline defaults (who exists + their default unlocked state)
+        private static readonly Dictionary<string, bool> DefaultUnlocked = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+    {
+        // Northtown
+        { "Kyle", true },
+        { "Austin", true },
+        { "Kathy", true },
+        { "Mick", true },
+        { "Sam", true },
+        { "Jessi", true },
+        { "Peter", false },
+        { "Chloe", false },
+        { "Ludwig", false },
+        { "Mrs.", false },
+        { "Geraldine", false },
+        { "Beth", false },
+        { "Peggy", false },
+        { "Donna", false },
+
+        // Westville
+        { "Trent", false },
+        { "Meg", false },
+        { "Joyce", false },
+        { "Keith", false },
+        { "Doris", false },
+        { "Jerry", false },
+        { "Kim", false },
+        { "Charles", false },
+        { "George", false },
+        { "Dean", false },
+
+        // Downtown
+        { "Jennifer", false },
+        { "Elizabeth", false },
+        { "Eugene", false },
+        { "Greg", false },
+        { "Jeff", false },
+        { "Kevin", false },
+        { "Louis", false },
+        { "Lucy", false },
+        { "Philip", false },
+        { "Randy", false },
+
+        // Docks
+        { "Anna", false },
+        { "Billy", false },
+        { "Cranky Frank", false },
+        { "Genghis", false },
+        { "Javier", false },
+        { "Lisa", false },
+        { "Mac", false },
+        { "Marco", false },
+        { "Melissa", false },
+
+        // Suburbia
+        { "Chris", false },
+        { "Allison", false },
+        { "Carl", false },
+        { "Dennis", false },
+        { "Hank", false },
+        { "Harold", false },
+        { "Jack", false },
+        { "Jackie", false },
+        { "Jeremy", false },
+        { "Karen", false },
+
+        // Uptown
+        { "Lily", false },
+        { "Fiona", false },
+        { "Herbert", false },
+        { "Jen", false },
+        { "Michael", false },
+        { "Pearl", false },
+        { "Ray", false },
+        { "Tobas", false },
+        { "Walter", false }
+    };
+
+        // Static constructor ensures defaults are loaded at startup
+        static CustomerUnlockTracker()
+        {
+            ResetAll();
+        }
+
+        public static bool IsUnlocked(string name)
+        {
+            return Unlocked.TryGetValue(name, out bool value) && value;
+        }
+
+        public static void SetUnlocked(string name, bool value)
+        {
+            if (!Unlocked.ContainsKey(name))
+            {
+                MelonLogger.Warning($"[CustomerUnlockTracker] Unknown customer: {name}");
+                return;
+            }
+
+            Unlocked[name] = value;
+            MelonLogger.Msg($"[CustomerUnlockTracker] SetUnlocked: {name} = {value}");
+        }
+
+        public static void ResetAll()
+        {
+            Unlocked.Clear();
+            foreach (var kvp in DefaultUnlocked)
+            {
+                Unlocked[kvp.Key] = kvp.Value;
+            }
+
+            MelonLogger.Msg("[CustomerUnlockTracker] All unlocks reset to defaults.");
+        }
+    }
+
+
+    [HarmonyPatch(typeof(Customer), "SampleWasSufficient")]
+    public class SampleWasSufficientPatch
+    {
+        static void Postfix(Customer __instance)
+        {
+            SampleTracker.SetGiven(__instance.name, true, __instance);
+            MelonLogger.Msg($"[SampleWasSufficientPatch] Sample succeeded for {__instance.name}");
+        }
     }
 
 
@@ -250,16 +697,125 @@ namespace Archipelago
     {
         static bool Prefix(NPCRelationData __instance, NPCRelationData.EUnlockType type, bool notify)
         {
-            string customerName = __instance.NPC?.name ?? "Unknown";
-
-            if (CustomerUnlockTracker.IsUnlocked(customerName))
+            var npc = __instance.NPC;
+            if (npc == null)
             {
-                MelonLogger.Msg($"[Unlock Allowed] Proceeding with unlock for: {customerName}");
-                return true; // Allow unlock
+                MelonLogger.Warning("[Unlock Patch] NPC is null — skipping patch to avoid save crash.");
+                return true; // Let original method run
             }
 
-            MelonLogger.Msg($"[Unlock Blocked] {customerName} is not approved by mod — skipping unlock.");
-            return false; // Block unlock
+            string name = npc.FirstName ?? npc.name ?? "Unknown";
+            Customer customer = npc.GetComponent<Customer>();
+
+            /*
+            SampleTracker.SetGiven(name, true);
+            if (customer != null)
+            {
+                SampleTracker.SetGiven(name, true, customer);
+            }
+            */
+            if (CustomerUnlockTracker.IsUnlocked(name))
+            {
+                MelonLogger.Msg($"[Unlock Allowed] Proceeding with unlock for: {name}");
+                return true;
+            }
+
+            MelonLogger.Msg($"[Unlock Blocked] {name} is not approved by mod — skipping unlock.");
+            return false;
+        }
+    }
+
+    public static class RegionUtils
+    {
+        public static bool IsCustomerRegionUnlocked(Customer customer)
+        {
+            var npcProp = AccessTools.Property(customer.GetType(), "NPC");
+            var npc = npcProp?.GetValue(customer);
+            if (npc == null) return false;
+
+            var regionField = AccessTools.Field(npc.GetType(), "Region");
+            var regionEnum = regionField?.GetValue(npc);
+            if (regionEnum == null) return false;
+
+            var mapType = AccessTools.TypeByName("ScheduleOne.Map.Map");
+            var mapInstance = AccessTools.Property(mapType, "Instance")?.GetValue(null);
+            if (mapInstance == null) return false;
+
+            var getRegionData = AccessTools.Method(mapType, "GetRegionData", new[] { regionEnum.GetType() });
+            var regionData = getRegionData?.Invoke(mapInstance, new object[] { regionEnum });
+            if (regionData == null) return false;
+
+            var isUnlockedProp = AccessTools.Property(regionData.GetType(), "IsUnlocked");
+            return (bool)(isUnlockedProp?.GetValue(regionData) ?? false);
+        }
+    }
+
+    [HarmonyPatch(typeof(Customer), "UpdatePotentialCustomerPoI")]
+    public class Patch_UpdatePotentialCustomerPoI
+    {
+        static void Prefix(Customer __instance)
+        {
+            if (__instance?.potentialCustomerPoI == null)
+                return;
+
+            if (!SampleEligibility.IsEligible(__instance, out string reason))
+            {
+                __instance.potentialCustomerPoI.enabled = false;
+            }
+        }
+
+        public static void RefreshPoIMarker(Customer customer)
+        {
+            if (customer?.potentialCustomerPoI == null)
+                return;
+
+            if (SampleEligibility.IsEligible(customer, out _))
+            {
+                customer.potentialCustomerPoI.enabled = true;
+            }
+            else
+            {
+                customer.potentialCustomerPoI.enabled = false;
+            }
+        }
+    }
+
+    public static class SampleEligibility
+    {
+        public static bool IsEligible(Customer customer, out string reason)
+        {
+            if (!RegionUtils.IsCustomerRegionUnlocked(customer))
+            {
+                reason = "region locked";
+                return false;
+            }
+
+            if (SampleTracker.HasGiven(customer.name))
+            {
+                reason = "sample succeeded";
+                return false;
+            }
+
+            reason = null;
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Customer), "IsUnlockable")]
+    public class Patch_IsUnlockable
+    {
+        static bool Prefix(Customer __instance, ref bool __result)
+        {
+            bool regionUnlocked = RegionUtils.IsCustomerRegionUnlocked(__instance);
+            if (!regionUnlocked)
+            {
+                MelonLogger.Msg($"[IsUnlockable Patch] {CustomerKey.Get(__instance)} — region not unlocked, not unlockable.");
+                __result = false;
+                return false; // skip original
+            }
+
+            // Allow original for other checks; AP can still unlock relations
+            return true;
         }
     }
 
@@ -315,144 +871,60 @@ namespace Archipelago
             return false; // skip original method
         }
     }
-    public static class CustomerUnlockTracker
-    {
-        public static Dictionary<string, bool> Unlocked = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
-    {
-        //Northtown
-        { "Kyle", true },
-        { "Austin", true },
-        { "Kathy", true },
-        { "Mick", true },
-        { "Sam", true },
-        { "Jessi", true },
-        { "Peter", false },
-        { "Chloe", false },
-        { "Ludwig", false },
-        { "Mrs", false },
-        { "Geraldine", false },
-        { "Beth", false },
-        { "Peggy", false },
-        { "Donna", false },
-        //Westville
-        { "Trent", false }, 
-        { "Meg", false },
-        { "Joyce", false },
-        { "Keith", false },
-        { "Doris", false },
-        { "Jerry", false },
-        { "Kim", false },
-        { "Charles", false },
-        { "George", false },
-        { "Dean", false },
-        //Downtown
-        { "Jennifer", false},
-        { "Elizabeth", false },
-        { "Eugene", false },
-        { "Greg", false },
-        { "Jeff", false },
-        { "Kevin", false },
-        { "Louis", false },
-        { "Lucy", false },
-        { "Philip", false },
-        { "Randy", false },
-        //Docks
-        { "Anna", false},
-        { "Billy", false },
-        { "Cranky", false },
-        { "Genghis", false },
-        { "Javier", false },
-        { "Lisa", false },
-        { "Mac", false },
-        { "Marco", false },
-        { "Melissa", false },
-        //Suburbia
-        { "Chris", false},
-        { "Allison", false },
-        { "Carl", false },
-        { "Dennis", false },
-        { "Hank", false },
-        { "Harold", false },
-        { "Jack", false },
-        { "Jackie", false },
-        { "Jeremy", false },
-        { "Karen", false },
-        //Uptown
-        { "Lily", false },
-        { "Fiona", false },
-        { "Herbert", false },
-        { "Jen", false },
-        { "Michael", false },
-        { "Pearl", false },
-        { "Ray", false },
-        { "Tobas", false },
-        { "Walter", false }
 
-    };
 
-        public static bool IsUnlocked(string name)
-        {
-            return Unlocked.TryGetValue(name, out bool value) && value;
-        }
-
-        public static void SetUnlocked(string name, bool value)
-        {
-            if (!Unlocked.ContainsKey(name))
-            {
-                MelonLogger.Warning($"[CustomerUnlockTracker] Unknown customer: {name}");
-                return;
-            }
-
-            Unlocked[name] = value;
-            MelonLogger.Msg($"[CustomerUnlockTracker] SetUnlocked: {name} = {value}");
-        }
-
-        public static void ResetAll()
-        {
-            foreach (var key in Unlocked.Keys.ToList())
-            {
-                Unlocked[key] = false;
-            }
-
-            // Reapply default
-            Unlocked["Kyle"] = true;
-            Unlocked["Austin"] = true;
-            Unlocked["Kathy"] = true;
-            Unlocked["Mick"] = true;
-            Unlocked["Sam"] = true;
-            Unlocked["Jessi"] = true;
-
-            MelonLogger.Msg("[CustomerUnlockTracker] All unlocks reset. Jessi set to true by default.");
-        }
-    }
 
     public static class PropertyPurchaseTracker
     {
-        public static Dictionary<string, bool> Purchased = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+            public static Dictionary<string, bool> Purchased { get; private set; } = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            private static HashSet<string> trackedItems = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // Called once at startup
+            public static void RegisterDefaults()
         {
-            {"MotelRoom", false },
-            {"Sweatshop", false},
-            {"StorageUnit", false },
-            {"Bungalow", false },
-            {"Barn", false },
-            {"DocksWarehouse", false },
-            {"Laundromat", false },
-            {"CarWash", false },
-            {"PostOffice", false },
-            {"TacoTicklers", false }
-        };
+            Register("motelroom");
+            Register("sweatshop");
+            Register("storageunit");
+            Register("bungalow");
+            Register("barn");
+            Register("dockswarehouse");
+            Register("laundromat");
+            Register("carwash");
+            Register("postoffice");
+            Register("tacoticklers");
+        }
+
+        public static void Register(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code)) return;
+            code = code.ToLowerInvariant();
+            trackedItems.Add(code);
+            if (!Purchased.ContainsKey(code))
+                Purchased[code] = false;
+            MelonLogger.Msg($"[PropertyPurchaseTracker] Registered: {code}");
+        }
 
         public static bool IsPurchased(string code)
         {
-            return Purchased.TryGetValue(code, out bool value) && value;
+            return Purchased.TryGetValue(code.ToLowerInvariant(), out bool value) && value;
         }
 
         public static void SetPurchased(string code, bool value)
         {
+            if (string.IsNullOrWhiteSpace(code)) return;
+            code = code.ToLowerInvariant();
             Purchased[code] = value;
             MelonLogger.Msg($"[PropertyPurchaseTracker] SetPurchased: {code} = {value}");
         }
+
+        public static bool Contains(string code)
+        {
+            return trackedItems.Contains(code.ToLowerInvariant());
+        }
+
+        public static IEnumerable<string> GetTrackedItems() => trackedItems;
     }
+
 
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ShouldChoiceBeShown")]
     public class ModShouldChoiceBeShownPatch
@@ -460,30 +932,68 @@ namespace Archipelago
         static bool Prefix(string choiceLabel, ref bool __result)
         {
             string normalized = choiceLabel.ToLowerInvariant();
+            
+            MelonLogger.Msg($"[Patch] Intercepted: {normalized}");
+            MelonLogger.Msg($"[Patch] Tracked: {PropertyPurchaseTracker.Contains(normalized)}, Purchased: {PropertyPurchaseTracker.IsPurchased(normalized)}");
 
-            // Check if the property or business is already purchased via mod logic
+            // If tracked but not purchased → show it
+            if (PropertyPurchaseTracker.Contains(normalized) && !PropertyPurchaseTracker.IsPurchased(normalized))
+            {
+                __result = true;
+                MelonLogger.Msg($"[ModShouldChoiceBeShownPatch] Showing tracked but unpurchased item: {normalized}");
+                return false;
+            }
+
+            // If purchased → hide it
             if (PropertyPurchaseTracker.IsPurchased(normalized))
             {
                 __result = false;
                 MelonLogger.Msg($"[ModShouldChoiceBeShownPatch] Hiding purchased item: {normalized}");
-                return false; // Skip original method
+                return false;
             }
 
-            // Optional: fallback to original logic if not tracked by mod
+            // Fallback to original logic
             return true;
         }
     }
+
+    public static class PurchaseGuard
+    {
+        public static HashSet<string> RecentlyProcessed = new HashSet<string>();
+
+        public static async void ScheduleClear(float seconds = 1f)
+        {
+            int ms = (int)(seconds * 1000);
+            await Task.Delay(ms);
+            RecentlyProcessed.Clear();
+            MelonLogger.Msg("[PurchaseGuard] Cleared recently processed purchases.");
+        }
+    }
+
+
 
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "DialogueCallback")]
     public class ModDialogueCallbackPatch
     {
         static bool Prefix(object __instance, string choiceLabel)
         {
-            var selectedPropertyField = AccessTools.Field(__instance.GetType(), "selectedProperty");
-            var selectedBusinessField = AccessTools.Field(__instance.GetType(), "selectedBusiness");
+            var propertyField = AccessTools.Field(__instance.GetType(), "selectedProperty");
+            var businessField = AccessTools.Field(__instance.GetType(), "selectedBusiness");
 
-            var property = selectedPropertyField.GetValue(__instance) as Property;
-            var business = selectedBusinessField.GetValue(__instance) as Business;
+            var property = propertyField.GetValue(__instance) as Property;
+            var business = businessField.GetValue(__instance) as Business;
+
+            string code = property?.PropertyCode.ToLowerInvariant() ?? business?.PropertyCode.ToLowerInvariant();
+            if (string.IsNullOrEmpty(code)) return true;
+
+            if (PurchaseGuard.RecentlyProcessed.Contains(code))
+            {
+                MelonLogger.Msg($"[ModDialogueCallbackPatch] Skipping duplicate purchase for '{code}'.");
+                return false;
+            }
+
+            PurchaseGuard.RecentlyProcessed.Add(code);
+            PurchaseGuard.ScheduleClear();
 
             if (choiceLabel == "CONFIRM_BUY" && property != null)
             {
@@ -494,9 +1004,10 @@ namespace Archipelago
                     string.Empty
                 );
 
-                PropertyPurchaseTracker.SetPurchased(property.PropertyCode, true);
-                MelonLogger.Msg($"[ModDialogueCallbackPatch] Marked property '{property.PropertyCode}' as purchased.");
-                return false; // Skip original method
+                property.SetOwned();
+                PropertyPurchaseTracker.SetPurchased(code, true);
+                MelonLogger.Msg($"[ModDialogueCallbackPatch] Purchased property '{code}' for ${property.Price:N0}.");
+                return false;
             }
 
             if (choiceLabel == "CONFIRM_BUY_BUSINESS" && business != null)
@@ -508,14 +1019,103 @@ namespace Archipelago
                     string.Empty
                 );
 
-                PropertyPurchaseTracker.SetPurchased(business.PropertyCode, true);
-                MelonLogger.Msg($"[ModDialogueCallbackPatch] Marked business '{business.PropertyCode}' as purchased.");
-                return false; // Skip original method
+                business.SetOwned();
+                PropertyPurchaseTracker.SetPurchased(code, true);
+                MelonLogger.Msg($"[ModDialogueCallbackPatch] Purchased business '{code}' for ${business.Price:N0}.");
+                return false;
             }
 
-            return true; // Let original method run for other choices
+            return true;
         }
     }
+
+
+    [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ChoiceCallback")]
+    public class ModChoiceCallbackPatch
+    {
+        static void Postfix(object __instance, string choiceLabel)
+        {
+            string code = choiceLabel.ToLowerInvariant();
+
+            if (PropertyPurchaseTracker.Contains(code) && !PropertyPurchaseTracker.IsPurchased(code))
+            {
+                var propertyField = AccessTools.Field(__instance.GetType(), "selectedProperty");
+                var businessField = AccessTools.Field(__instance.GetType(), "selectedBusiness");
+
+                var property = Property.Properties.Find(p => p.PropertyCode.ToLower() == code);
+                var business = Business.Businesses.Find(b => b.PropertyCode.ToLower() == code);
+
+                if (property != null && property.IsOwned)
+                {
+                    propertyField.SetValue(__instance, property);
+                    Traverse.Create(__instance).Method("ChoiceCallback", new[] { typeof(string) }).GetValue("CONFIRM_BUY");
+                }
+                else if (business != null && business.IsOwned)
+                {
+                    businessField.SetValue(__instance, business);
+                    Traverse.Create(__instance).Method("ChoiceCallback", new[] { typeof(string) }).GetValue("CONFIRM_BUY_BUSINESS");
+                }
+            }
+        }
+    }
+
+
+    [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "CheckChoice")]
+    public class ModCheckChoicePatch
+    {
+        static bool Prefix(string choiceLabel, ref string invalidReason, ref bool __result)
+        {
+            string code = choiceLabel.ToLowerInvariant();
+
+            if (PropertyPurchaseTracker.Contains(code) && !PropertyPurchaseTracker.IsPurchased(code))
+            {
+                var property = Property.Properties.Find(p => p.PropertyCode.ToLower() == code);
+                var business = Business.Businesses.Find(b => b.PropertyCode.ToLower() == code);
+
+                float price = property?.Price ?? business?.Price ?? -1f;
+                float balance = NetworkSingleton<MoneyManager>.Instance.sync___get_value_onlineBalance();
+
+                if (price > 0 && balance < price)
+                {
+                    invalidReason = "Insufficient balance";
+                    __result = false;
+                    return false; // Skip original method
+                }
+            }
+
+            return true; // Let original method handle everything else
+        }
+    }
+
+
+    [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ModifyChoiceText")]
+    public class ModPriceInjectionPatch
+    {
+        static bool Prefix(string choiceLabel, string choiceText, ref string __result)
+        {
+            string code = choiceLabel.ToLowerInvariant();
+
+            // Only inject price if it's tracked and not purchased
+            if (PropertyPurchaseTracker.Contains(code) && !PropertyPurchaseTracker.IsPurchased(code))
+            {
+                // Try to find the property or business by code
+                var property = Property.Properties.Find(p => p.PropertyCode.ToLower() == code);
+                var business = Business.Businesses.Find(b => b.PropertyCode.ToLower() == code);
+
+                float price = property?.Price ?? business?.Price ?? -1;
+
+                if (price > 0)
+                {
+                    string formatted = $"<color=#19BEF0>(${price:N0})</color>";
+                    __result = choiceText.Replace("(<PRICE>)", formatted);
+                    return false; // Skip original method
+                }
+            }
+
+            return true; // Let original method handle other cases
+        }
+    }
+
 
     //prevents owning the sweatshop and motel room through normal means
 
@@ -567,6 +1167,19 @@ namespace Archipelago
         }
     }
 
+    [HarmonyPatch(typeof(ProductDefinition), "AddRecipe")]
+    public class Patch_Product_AddRecipe
+    {
+        static void Postfix(ProductDefinition __instance, StationRecipe recipe)
+        {
+            // This runs after the recipe is added — safe to inspect or react
+            MelonLogger.Msg($"[Patch] Recipe added to product: {__instance.name} → {recipe.name}");
+
+            // TODO: Later replace this with an Archipelago item check
+            // if (Archipelago.HasReceived("Unlock_" + recipe.name)) { ... }
+        }
+    }
+
     //UNLOCKING CUSTOMERS
     public class UnlockingCustomers
     {
@@ -585,30 +1198,44 @@ namespace Archipelago
     //Unlocking Example
     //UnlockingCustomers.TryUnlockCustomer("Meg", "meg_cooley", NPCRelationData.EUnlockType.DirectApproach);
 
+    [HarmonyPatch(typeof(Customer), "OnCustomerUnlocked")]
+    public class OnCustomerUnlockedPatch
+    {
+        static void Postfix(Customer __instance)
+        {
+            var field = AccessTools.Field(typeof(Customer), "sampleOfferedToday");
+            if (field != null)
+            {
+                field.SetValue(__instance, false);
+                MelonLogger.Msg($"[OnCustomerUnlockedPatch] Reset sampleOfferedToday for {__instance.name} after unlock");
+            }
+        }
+    }
 
     /* LOGS ALL COMPLETED DEALS */
     [HarmonyPatch(typeof(Customer), "ContractWellReceived")]
     public class ContractWellReceivedListener
     {
         static bool alreadyLoggedContracts = false;
-        static void Postfix(string npcToRecommend)
+
+        static void Postfix(Customer __instance, string npcToRecommend)
         {
-            if (!alreadyLoggedContracts) {
-                MelonLogger.Msg($"Contract Well Received");
-                //This was testing the console commands.
-                //ScheduleOne.Console.SubmitCommand(new List<string> { "teleport", "barn" });
-                
-                
-                alreadyLoggedContracts = true;
-                resetAlreadyLoggedContracts();
+            if (!alreadyLoggedContracts)
+            {
+
+                    MelonLogger.Msg("Contract Well Received");
+                    UnlockingCustomers.TryUnlockCustomer("Peter", "peter_file", NPCRelationData.EUnlockType.DirectApproach);
+                    alreadyLoggedContracts = true;
+                    resetAlreadyLoggedContracts();
             }
-            
         }
+
         static async void resetAlreadyLoggedContracts()
         {
             await Task.Delay(1000); // 1-second cooldown
             alreadyLoggedContracts = false;
         }
+
         /* BLOCKS UNLOCKING OF DEALERS AND SUPPLIERS (EXCEPT FOR ALBERT THROUGH NELSON) */
         static bool Prefix(string npcToRecommend)
         {
@@ -622,6 +1249,7 @@ namespace Archipelago
             return true; // Allow original method to run
         }
     }
+
 
     //SLOT MACHINE LISTENER
     [HarmonyPatch(typeof(SlotMachine), "GetWinAmount")]
@@ -739,6 +1367,7 @@ namespace Archipelago
         }
 
     }
+
     [HarmonyPatch(typeof(Player), "SleepStart")]
     public class PlayerSleepStartPatch
     {
