@@ -28,24 +28,36 @@ namespace Archipelago
     {
         static bool Prefix(object __instance, string choiceLabel)
         {
+            // Normalize label for safety
+            choiceLabel = choiceLabel?.Trim().ToUpperInvariant();
+
             var propertyField = AccessTools.Field(__instance.GetType(), "selectedProperty");
             var businessField = AccessTools.Field(__instance.GetType(), "selectedBusiness");
 
             var property = propertyField.GetValue(__instance) as Property;
             var business = businessField.GetValue(__instance) as Business;
 
-            string code = property?.PropertyCode.ToLowerInvariant() ?? business?.PropertyCode.ToLowerInvariant();
-            if (string.IsNullOrEmpty(code)) return true;
+            string code = property?.PropertyCode.ToLowerInvariant() ??
+                          business?.PropertyCode.ToLowerInvariant();
 
-            if (PurchaseGuard.RecentlyProcessed.Contains(code))
+            MelonLogger.Msg($"[EstateAgent] choiceLabel = {choiceLabel}");
+
+            if (string.IsNullOrEmpty(code))
+                return true;
+
+            // Identify purchase callbacks
+            bool isPurchaseCallback =
+                (choiceLabel == "CONFIRM_BUY" && property != null) ||
+                (choiceLabel == "CONFIRM_BUY_BUSINESS" && business != null);
+
+            // Apply per-business purchase guard
+            if (isPurchaseCallback && !PurchaseGuard.ShouldProcess(code))
             {
                 MelonLogger.Msg($"[ModDialogueCallbackPatch] Skipping duplicate purchase for '{code}'.");
                 return false;
             }
 
-            PurchaseGuard.RecentlyProcessed.Add(code);
-            PurchaseGuard.ScheduleClear();
-
+            // PROPERTY PURCHASE
             if (choiceLabel == "CONFIRM_BUY" && property != null)
             {
                 NetworkSingleton<MoneyManager>.Instance.CreateOnlineTransaction(
@@ -55,12 +67,12 @@ namespace Archipelago
                     string.Empty
                 );
 
-                property.SetOwned();
                 PropertyPurchaseTracker.SetPurchased(code, true);
                 MelonLogger.Msg($"[ModDialogueCallbackPatch] Purchased property '{code}' for ${property.Price:N0}.");
                 return false;
             }
 
+            // BUSINESS PURCHASE
             if (choiceLabel == "CONFIRM_BUY_BUSINESS" && business != null)
             {
                 NetworkSingleton<MoneyManager>.Instance.CreateOnlineTransaction(
@@ -70,7 +82,6 @@ namespace Archipelago
                     string.Empty
                 );
 
-                business.SetOwned();
                 PropertyPurchaseTracker.SetPurchased(code, true);
                 MelonLogger.Msg($"[ModDialogueCallbackPatch] Purchased business '{code}' for ${business.Price:N0}.");
                 return false;
