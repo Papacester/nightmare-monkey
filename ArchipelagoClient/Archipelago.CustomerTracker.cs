@@ -133,7 +133,7 @@ namespace Archipelago
             MelonLogger.Msg("[CustomerUnlockTracker] All unlocks reset to defaults.");
         }
     }
-    
+    /*
     [HarmonyPatch(typeof(NPCRelationData), "Unlock")]
     public class Patch_NPCRelationData_Unlock
     {
@@ -148,7 +148,7 @@ namespace Archipelago
 
             string name = npc.FirstName ?? npc.name ?? "Unknown";
             Customer customer = npc.GetComponent<Customer>();
-
+            */
             /*
             SampleTracker.SetGiven(name, true);
             if (customer != null)
@@ -156,6 +156,7 @@ namespace Archipelago
                 SampleTracker.SetGiven(name, true, customer);
             }
             */
+            /*
             if (CustomerUnlockTracker.IsUnlocked(name))
             {
                 MelonLogger.Msg($"[Unlock Allowed] Proceeding with unlock for: {name}");
@@ -166,7 +167,7 @@ namespace Archipelago
             return false;
         }
     }
-
+    */
     public class UnlockingCustomers
     {
         public static void TryUnlockCustomer(string name, string name2, NPCRelationData.EUnlockType type)

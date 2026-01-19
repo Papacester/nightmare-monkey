@@ -1,3 +1,4 @@
+using FishNet.Connection;
 using HarmonyLib;
 using MelonLoader;
 using ScheduleOne.Economy;
@@ -116,7 +117,64 @@ namespace Archipelago
         }
     }
 
+    public static class DealerRecruitGuard
+    {
+        public static bool ShouldAllow(string name)
+        {
+            // 1. AP unlocks always allowed
+            if (RecruitmentTracker.HasRecruitedAP(name))
+                return true;
 
+            // 2. CustomerUnlockTracker unlocks allowed
+            if (CustomerUnlockTracker.IsUnlocked(name))
+                return true;
+
+            // Otherwise blocked
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Dealer), "SetIsRecruited")]
+    public static class Patch_Dealer_SetIsRecruited
+    {
+        static bool Prefix(Dealer __instance, NetworkConnection conn)
+        {
+            string name = __instance.name;
+
+            if (DealerRecruitGuard.ShouldAllow(name))
+            {
+                RecruitmentTracker.MarkRecruitedAP(name);
+                MelonLogger.Msg($"[RecruitmentTracker] Allowing recruitment for {name}.");
+                return true;
+            }
+
+            MelonLogger.Msg($"[RecruitmentTracker] BLOCKED SetIsRecruited for {name}.");
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Dealer), "RpcLogic___SetIsRecruited_328543758")]
+    public static class Patch_Dealer_RpcLogic_SetIsRecruited
+    {
+        static bool Prefix(Dealer __instance, NetworkConnection conn)
+        {
+            string name = __instance.name;
+
+            if (DealerRecruitGuard.ShouldAllow(name))
+            {
+                RecruitmentTracker.MarkRecruitedAP(name);
+                MelonLogger.Msg($"[RecruitmentTracker] Allowing RpcLogic recruitment for {name}.");
+                return true;
+            }
+
+            MelonLogger.Msg($"[RecruitmentTracker] BLOCKED RpcLogic recruitment for {name}.");
+            return false;
+        }
+    }
+
+
+
+    /*
     [HarmonyPatch(typeof(NPCRelationData), "Unlock")]
     public static class Patch_Unlock
     {
@@ -156,5 +214,6 @@ namespace Archipelago
 
         }
     }
+    */
 
 }

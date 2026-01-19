@@ -10,7 +10,11 @@ namespace Archipelago
     {
         static void Postfix(ProductDefinition __instance, StationRecipe recipe)
         {
-            MelonLogger.Msg($"[Patch] Recipe added to product: {__instance.name} → {recipe.name}");
+            EDrugType baseDrug = __instance.DrugType;
+
+            MelonLogger.Msg(
+                $"[Patch] Recipe added → Product: {__instance.name}, BaseDrug: {baseDrug}, Recipe: {recipe.name}"
+            );
         }
     }
 }
