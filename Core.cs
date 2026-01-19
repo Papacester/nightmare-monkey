@@ -3,18 +3,23 @@ using Archipelago.MultiClient.Net.Enums;
 using HarmonyLib;
 using JetBrains.Annotations;
 using MelonLoader;
+using Il2CppScheduleOne.Dialogue;
+using Il2CppScheduleOne.Economy;
+using Il2CppScheduleOne.NPCs;
+using Il2CppScheduleOne.NPCs.Relation;
+using Il2CppScheduleOne.Persistence;
+using Il2CppScheduleOne.PlayerScripts;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Threading.Tasks;   
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "0.2.0", "Mack", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
 {
     public class Core : MelonMod
     {
-
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Narcopelago v" + Info.Version + " loaded!");

@@ -35,10 +35,13 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AmplifyImpostors.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="Assembly-CSharp-firstpass">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
 		</Reference>
 		<Reference Include="Assembly-CSharp">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Assembly-CSharp.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="AstarPathfindingProject">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AstarPathfindingProject.dll</HintPath>
@@ -96,6 +99,12 @@
 		</Reference>
 		<Reference Include="HSVPicker">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HSVPicker.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppSystem">
+		  <HintPath>..\..\..\..\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2Cppmscorlib">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
 		</Reference>
 		<Reference Include="LokoSolo.PinchableScrollRect">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\LokoSolo.PinchableScrollRect.dll</HintPath>
@@ -293,7 +302,7 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ContentLoadModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CrashReportingModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
@@ -302,7 +311,7 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.DSPGraphModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
@@ -323,7 +332,7 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.IMGUIModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.InputLegacyModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
@@ -395,7 +404,7 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.TextRenderingModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.TilemapModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
@@ -404,13 +413,13 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.UI">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UI.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.UIElementsModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.UIModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.UmbraModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
@@ -476,10 +485,10 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\VisualDesignCafe.ShaderX.dll</HintPath>
 		</Reference>
 		<Reference Include="MelonLoader">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net35\MelonLoader.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\MelonLoader.dll</HintPath>
 		</Reference>
 		<Reference Include="0Harmony">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net35\0Harmony.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\0Harmony.dll</HintPath>
 		</Reference>
 
 	</ItemGroup>
@@ -491,6 +500,8 @@
 
 	<ItemGroup>
 		<Compile Include="Core.cs" />
+		<Compile Include="NarcopelagoMainMenu.cs" />
+		<Compile Include="NarcopelagoUI.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
