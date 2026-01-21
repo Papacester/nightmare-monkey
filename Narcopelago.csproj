@@ -500,7 +500,12 @@
 
 	<ItemGroup>
 		<Compile Include="Core.cs" />
+		<Compile Include="Data_Events.cs" />
+		<Compile Include="Data_Items.cs" />
+		<Compile Include="Data_Locations.cs" />
+		<Compile Include="NarcopelagoLocations.cs" />
 		<Compile Include="NarcopelagoMainMenu.cs" />
+		<Compile Include="NarcopelagoQuests.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
 	</ItemGroup>
 

@@ -12,6 +12,19 @@ namespace Narcopelago
 {
     public static class NarcopelagoUI
     {
+        // Event that fires when Connect button is clicked (host, port, slotName, password)
+        public static event Action<string, int, string, string> OnConnectClicked;
+
+        // Call this to update the status text from connection result
+        public static void SetConnectionStatus(bool success, string message)
+        {
+            if (Schedule1PanelManager.StatusText != null)
+            {
+                Schedule1PanelManager.StatusText.text = message;
+                Schedule1PanelManager.StatusText.color = success ? Color.green : Color.red;
+            }
+        }
+
         public static GameObject CreatePanel(Transform parent)
         {
             if (GameObject.Find("Schedule1Panel") != null)
@@ -144,60 +157,102 @@ namespace Narcopelago
             passTextRect.offsetMin = Vector2.zero;
             passTextRect.offsetMax = Vector2.zero;
 
-            // Create input field container
-            GameObject inputGO = new GameObject("HostInput");
-            inputGO.transform.SetParent(panel.transform, false);
+            // Create Host input field
+            GameObject hostGO = new GameObject("HostInput");
+            hostGO.transform.SetParent(panel.transform, false);
 
-            // Add background image
-            Image inputBG = inputGO.AddComponent<Image>();
-            inputBG.color = new Color(0.2f, 0.2f, 0.2f, 1f); // dark gray
+            Image hostBG = hostGO.AddComponent<Image>();
+            hostBG.color = new Color(0.2f, 0.2f, 0.2f, 1f);
 
-            // Add InputField component
-            InputField inputField = inputGO.AddComponent<InputField>();
+            InputField hostField = hostGO.AddComponent<InputField>();
 
-            // Add placeholder text
-            GameObject placeholderGO = new GameObject("Placeholder");
-            placeholderGO.transform.SetParent(inputGO.transform, false);
-            Text placeholder = placeholderGO.AddComponent<Text>();
-            placeholder.text = "address:port";
-            placeholder.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            placeholder.fontSize = 18;
-            placeholder.color = new Color(1f, 1f, 1f, 0.5f);
-            placeholder.alignment = TextAnchor.MiddleLeft;
+            GameObject hostPlaceholderGO = new GameObject("Placeholder");
+            hostPlaceholderGO.transform.SetParent(hostGO.transform, false);
+            Text hostPlaceholder = hostPlaceholderGO.AddComponent<Text>();
+            hostPlaceholder.text = "Host (e.g. localhost)";
+            hostPlaceholder.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            hostPlaceholder.fontSize = 18;
+            hostPlaceholder.color = new Color(1f, 1f, 1f, 0.5f);
+            hostPlaceholder.alignment = TextAnchor.MiddleLeft;
 
-            // Add text component
-            GameObject textGO = new GameObject("Text");
-            textGO.transform.SetParent(inputGO.transform, false);
-            Text inputText = textGO.AddComponent<Text>();
-            inputText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            inputText.fontSize = 18;
-            inputText.color = Color.white;
-            inputText.alignment = TextAnchor.MiddleLeft;
+            GameObject hostTextGO = new GameObject("Text");
+            hostTextGO.transform.SetParent(hostGO.transform, false);
+            Text hostText = hostTextGO.AddComponent<Text>();
+            hostText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            hostText.fontSize = 18;
+            hostText.color = Color.white;
+            hostText.alignment = TextAnchor.MiddleLeft;
 
-            // Wire up InputField
-            inputField.textComponent = inputText;
-            inputField.placeholder = placeholder;
+            hostField.textComponent = hostText;
+            hostField.placeholder = hostPlaceholder;
 
-            // Layout
-            RectTransform inputRect = inputGO.GetComponent<RectTransform>();
-            inputRect.anchorMin = new Vector2(0.5f, 0f);
-            inputRect.anchorMax = new Vector2(0.5f, 0f);
-            inputRect.pivot = new Vector2(0.5f, 0f);
-            inputRect.anchoredPosition = new Vector2(0, 80); // just above the button
-            inputRect.sizeDelta = new Vector2(300, 40);
+            RectTransform hostRect = hostGO.GetComponent<RectTransform>();
+            hostRect.anchorMin = new Vector2(0.5f, 0f);
+            hostRect.anchorMax = new Vector2(0.5f, 0f);
+            hostRect.pivot = new Vector2(0.5f, 0f);
+            hostRect.anchoredPosition = new Vector2(-55, 80);
+            hostRect.sizeDelta = new Vector2(190, 40);
 
-            // Layout for placeholder and text
-            RectTransform placeholderRect = placeholder.GetComponent<RectTransform>();
-            placeholderRect.anchorMin = Vector2.zero;
-            placeholderRect.anchorMax = Vector2.one;
-            placeholderRect.offsetMin = Vector2.zero;
-            placeholderRect.offsetMax = Vector2.zero;
+            RectTransform hostPlaceholderRect = hostPlaceholder.GetComponent<RectTransform>();
+            hostPlaceholderRect.anchorMin = Vector2.zero;
+            hostPlaceholderRect.anchorMax = Vector2.one;
+            hostPlaceholderRect.offsetMin = Vector2.zero;
+            hostPlaceholderRect.offsetMax = Vector2.zero;
 
-            RectTransform textRect = inputText.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
+            RectTransform hostTextRect = hostText.GetComponent<RectTransform>();
+            hostTextRect.anchorMin = Vector2.zero;
+            hostTextRect.anchorMax = Vector2.one;
+            hostTextRect.offsetMin = Vector2.zero;
+            hostTextRect.offsetMax = Vector2.zero;
+
+            // Create Port input field
+            GameObject portGO = new GameObject("PortInput");
+            portGO.transform.SetParent(panel.transform, false);
+
+            Image portBG = portGO.AddComponent<Image>();
+            portBG.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+
+            InputField portField = portGO.AddComponent<InputField>();
+            portField.contentType = InputField.ContentType.IntegerNumber;
+
+            GameObject portPlaceholderGO = new GameObject("Placeholder");
+            portPlaceholderGO.transform.SetParent(portGO.transform, false);
+            Text portPlaceholder = portPlaceholderGO.AddComponent<Text>();
+            portPlaceholder.text = "Port";
+            portPlaceholder.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            portPlaceholder.fontSize = 18;
+            portPlaceholder.color = new Color(1f, 1f, 1f, 0.5f);
+            portPlaceholder.alignment = TextAnchor.MiddleLeft;
+
+            GameObject portTextGO = new GameObject("Text");
+            portTextGO.transform.SetParent(portGO.transform, false);
+            Text portText = portTextGO.AddComponent<Text>();
+            portText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            portText.fontSize = 18;
+            portText.color = Color.white;
+            portText.alignment = TextAnchor.MiddleLeft;
+
+            portField.textComponent = portText;
+            portField.placeholder = portPlaceholder;
+
+            RectTransform portRect = portGO.GetComponent<RectTransform>();
+            portRect.anchorMin = new Vector2(0.5f, 0f);
+            portRect.anchorMax = new Vector2(0.5f, 0f);
+            portRect.pivot = new Vector2(0.5f, 0f);
+            portRect.anchoredPosition = new Vector2(100, 80);
+            portRect.sizeDelta = new Vector2(100, 40);
+
+            RectTransform portPlaceholderRect = portPlaceholder.GetComponent<RectTransform>();
+            portPlaceholderRect.anchorMin = Vector2.zero;
+            portPlaceholderRect.anchorMax = Vector2.one;
+            portPlaceholderRect.offsetMin = Vector2.zero;
+            portPlaceholderRect.offsetMax = Vector2.zero;
+
+            RectTransform portTextRect = portText.GetComponent<RectTransform>();
+            portTextRect.anchorMin = Vector2.zero;
+            portTextRect.anchorMax = Vector2.one;
+            portTextRect.offsetMin = Vector2.zero;
+            portTextRect.offsetMax = Vector2.zero;
 
             //Confirm Button
             GameObject buttonGO = new GameObject("ConfirmButton");
@@ -246,31 +301,32 @@ namespace Narcopelago
             statusRect.sizeDelta = new Vector2(300, 30);
 
             Schedule1PanelManager.StatusText = statusText;
+            Schedule1PanelManager.HostField = hostField;
+            Schedule1PanelManager.PortField = portField;
+            Schedule1PanelManager.SlotNameField = nameField;
+            Schedule1PanelManager.PasswordField = passField;
 
             button.onClick.AddListener((UnityAction)OnConnectButtonClicked);
 
             void OnConnectButtonClicked()
             {
-                string host = inputField.text;
+                string host = hostField.text;
+                string portStr = portField.text;
                 string playerName = nameField.text;
                 string password = passField.text;
 
-                // Simulate connection logic
-                bool success = !string.IsNullOrEmpty(host) && host.Contains(":");
+                int port = 38281; // default port
+                int.TryParse(portStr, out port);
 
+                // Show connecting status
                 if (Schedule1PanelManager.StatusText != null)
                 {
-                    if (success)
-                    {
-                        Schedule1PanelManager.StatusText.text = "Connected successfully!";
-                        Schedule1PanelManager.StatusText.color = Color.green;
-                    }
-                    else
-                    {
-                        Schedule1PanelManager.StatusText.text = "Failed to connect.";
-                        Schedule1PanelManager.StatusText.color = Color.red;
-                    }
+                    Schedule1PanelManager.StatusText.text = "Connecting...";
+                    Schedule1PanelManager.StatusText.color = Color.yellow;
                 }
+        
+                // Invoke the event so subscribers can handle connection
+                OnConnectClicked?.Invoke(host, port, playerName, password);
             }
 
 
