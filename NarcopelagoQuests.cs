@@ -191,29 +191,11 @@ namespace Narcopelago
                 if (string.Equals(locationQuestPart, questTitle, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(locationEntryPart, entryName, StringComparison.OrdinalIgnoreCase))
                 {
-                    return locationName; // Return the full location name for Archipelago lookup
+                return locationName; // Return the full location name for Archipelago lookup
                 }
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Gets the Archipelago location ID for a given quest entry.
-        /// Location names are formatted as "Quest Title|Entry Name"
-        /// </summary>
-        /// <param name="questTitle">The title of the parent quest.</param>
-        /// <param name="entryName">The name of the quest entry.</param>
-        /// <returns>The Archipelago location ID (modern_id), or -1 if not mapped.</returns>
-        [Obsolete("Use GetLocationNameForQuestEntry and NarcopelagoLocations.GetLocationId instead")]
-        public static int GetLocationIdForQuestEntry(string questTitle, string entryName)
-        {
-            var locationName = GetLocationNameForQuestEntry(questTitle, entryName);
-            if (locationName != null && _missionLocationCache.TryGetValue(locationName, out int modernId))
-            {
-                return modernId;
-            }
-            return -1;
         }
 
         /// <summary>
