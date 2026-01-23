@@ -1,0 +1,30 @@
+    public static class RegionUtils
+    {
+        public static bool IsCustomerRegionUnlocked(Customer customer)
+        {
+            // NPC
+            var npc = AccessTools.Property(customer.GetType(), "NPC")?.GetValue(customer);
+            if (npc == null)
+                return false;
+
+            // Region (property)
+            var region = AccessTools.Property(npc.GetType(), "Region")?.GetValue(npc);
+            if (region == null)
+                return false;
+
+            // Map.Instance
+            var mapInstance = AccessTools.Property(typeof(Map), "Instance")?.GetValue(null);
+            if (mapInstance == null)
+                return false;
+
+            // RegionData
+            var regionData = AccessTools.Method(typeof(Map), "GetRegionData", new[] { region.GetType() })
+                                       ?.Invoke(mapInstance, new object[] { region });
+            if (regionData == null)
+                return false;
+
+            // IsUnlocked
+            return (bool)(AccessTools.Property(regionData.GetType(), "IsUnlocked")
+                                     ?.GetValue(regionData) ?? false);
+        }
+    }
