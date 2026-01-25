@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace Narcopelago
@@ -11,23 +12,41 @@ namespace Narcopelago
         [JsonProperty("region")]
         public string Region { get; set; }
 
+        /// <summary>
+        /// Requirements can be either:
+        /// - true (always accessible)
+        /// - Dictionary of requirements
+        /// </summary>
         [JsonProperty("requirements")]
-        public Dictionary<string, int> Requirements { get; set; }
-
-        [JsonProperty("requirements_type")]
-        public string RequirementsType { get; set; }
-
-        [JsonProperty("requirements_alt")]
-        public Dictionary<string, int> RequirementsAlt { get; set; }
-
-        [JsonProperty("requirements_alt_type")]
-        public string RequirementsAltType { get; set; }
+        public object Requirements { get; set; }
 
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
 
         [JsonProperty("modern_id")]
         public int ModernId { get; set; }
+
+        /// <summary>
+        /// Helper to check if requirements is simply 'true'
+        /// </summary>
+        public bool HasNoRequirements()
+        {
+            if (Requirements is bool boolValue)
+                return boolValue;
+            return false;
+        }
+
+        /// <summary>
+        /// Helper to get requirements as a dictionary (if not bool)
+        /// </summary>
+        public Dictionary<string, object> GetRequirementsDict()
+        {
+            if (Requirements is JObject jobj)
+                return jobj.ToObject<Dictionary<string, object>>();
+            if (Requirements is Dictionary<string, object> dict)
+                return dict;
+            return null;
+        }
     }
 
     /// <summary>
@@ -101,3 +120,4 @@ namespace Narcopelago
         }
     }
 }
+

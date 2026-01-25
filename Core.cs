@@ -12,9 +12,10 @@ using Il2CppScheduleOne.PlayerScripts;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;   
+using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.0", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.1.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -31,6 +32,11 @@ namespace Narcopelago
         /// </summary>
         public static bool DataLoaded { get; private set; }
 
+        /// <summary>
+        /// The name of the main game scene (not menu)
+        /// </summary>
+        private const string GAME_SCENE_NAME = "Main";
+
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Narcopelago v" + Info.Version + " loaded!");
@@ -40,6 +46,21 @@ namespace Narcopelago
             
             // Subscribe to connect button - connection happens when user clicks Connect
             NarcopelagoUI.OnConnectClicked += ConnectionHandler.HandleConnect;
+        }
+
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
+            
+            // Process any pending customer unlocks when entering a game scene
+            if (sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading")
+            {
+                if (NarcopelagoItems.IsInitialized)
+                {
+                    LoggerInstance.Msg("Game scene detected - processing pending customer unlocks");
+                    NarcopelagoCustomers.ProcessPendingUnlocks();
+                }
+            }
         }
 
         private void LoadDataFiles()
@@ -77,19 +98,6 @@ namespace Narcopelago
                     LoggerInstance.Warning($"locations.json not found at: {locationsPath}");
                 }
 
-                // Load events.json
-                string eventsPath = Path.Combine(DataPath, "events.json");
-                if (File.Exists(eventsPath))
-                {
-                    string eventsJson = File.ReadAllText(eventsPath);
-                    Data_Events.LoadFromJson(eventsJson);
-                    LoggerInstance.Msg($"Loaded {Data_Events.Events?.Count ?? 0} events");
-                }
-                else
-                {
-                    LoggerInstance.Warning($"events.json not found at: {eventsPath}");
-                }
-
                 // Load items.json
                 string itemsPath = Path.Combine(DataPath, "items.json");
                 if (File.Exists(itemsPath))
@@ -104,7 +112,6 @@ namespace Narcopelago
                 }
 
                 DataLoaded = Data_Locations.Locations != null && 
-                             Data_Events.Events != null && 
                              Data_Items.Items != null;
 
                 if (DataLoaded)

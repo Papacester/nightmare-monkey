@@ -9,6 +9,7 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using System;
 using System.Threading.Tasks;
+using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 
 namespace Narcopelago
 {
@@ -48,7 +49,6 @@ namespace Narcopelago
             try
             {
                 var session = ArchipelagoSessionFactory.CreateSession(host, port);
-                
                 // Try to connect with a timeout
                 var connectTask = session.ConnectAsync();
                 var timeoutTask = Task.Delay(10000); // 10 second timeout
@@ -83,6 +83,31 @@ namespace Narcopelago
                     LastSlotName = slotName;
                     LastPassword = password;
                     CurrentSession = session;
+
+                    // Load options from the server's slot data
+                    var loginSuccess = (LoginSuccessful)result;
+                    if (loginSuccess.SlotData != null)
+                    {
+                        NarcopelagoOptions.LoadFromSlotData(loginSuccess.SlotData);
+                    }
+                    else
+                    {
+                        MelonLogger.Warning("No SlotData received from server");
+                    }
+
+                    // Enable DeathLink if the option is enabled
+                    if (NarcopelagoOptions.Deathlink)
+                    {
+                        MelonLogger.Msg("DeathLink is enabled, activating...");
+                        NarcopelagoDeathLink.Enable(session);
+                    }
+                    else
+                    {
+                        MelonLogger.Msg("DeathLink is disabled");
+                    }
+
+                    // Initialize item receiving - this will process starting items
+                    NarcopelagoItems.Initialize(session);
                 }
                 else
                 {

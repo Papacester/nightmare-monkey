@@ -57,6 +57,7 @@ namespace Narcopelago
         /// <summary>
         /// Marks a location as completed and sends it to the server.
         /// Call this when the player completes a check in-game.
+        /// This runs asynchronously to avoid blocking the game.
         /// </summary>
         /// <param name="locationId">The location ID to complete.</param>
         public static void CompleteLocation(long locationId)
@@ -67,19 +68,24 @@ namespace Narcopelago
                 return;
             }
 
-            try
+            // Run async to avoid blocking the game
+            Task.Run(() =>
             {
-                Locations.CompleteLocationChecks(locationId);
-                MelonLogger.Msg($"Location {locationId} completed!");
-            }
-            catch (Exception ex)
-            {
-                MelonLogger.Error($"Failed to complete location {locationId}: {ex.Message}");
-            }
+                try
+                {
+                    Locations.CompleteLocationChecks(locationId);
+                    MelonLogger.Msg($"Location {locationId} completed!");
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error($"Failed to complete location {locationId}: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>
         /// Marks multiple locations as completed and sends them to the server.
+        /// This runs asynchronously to avoid blocking the game.
         /// </summary>
         /// <param name="locationIds">The location IDs to complete.</param>
         public static void CompleteLocations(params long[] locationIds)
@@ -90,15 +96,19 @@ namespace Narcopelago
                 return;
             }
 
-            try
+            // Run async to avoid blocking the game
+            Task.Run(() =>
             {
-                Locations.CompleteLocationChecks(locationIds);
-                MelonLogger.Msg($"Completed {locationIds.Length} locations!");
-            }
-            catch (Exception ex)
-            {
-                MelonLogger.Error($"Failed to complete locations: {ex.Message}");
-            }
+                try
+                {
+                    Locations.CompleteLocationChecks(locationIds);
+                    MelonLogger.Msg($"Completed {locationIds.Length} locations!");
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error($"Failed to complete locations: {ex.Message}");
+                }
+            });
         }
 
         /// <summary>

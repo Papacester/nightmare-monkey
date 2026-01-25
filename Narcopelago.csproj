@@ -79,6 +79,9 @@
 		<Reference Include="FishNet.Runtime">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\FishNet.Runtime.dll</HintPath>
 		</Reference>
+		<Reference Include="Il2CppFishNet.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2CppFishNet.Runtime.dll</HintPath>
+		</Reference>
 		<Reference Include="GameKit.Dependencies">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\GameKit.Dependencies.dll</HintPath>
 		</Reference>
@@ -500,11 +503,14 @@
 
 	<ItemGroup>
 		<Compile Include="Core.cs" />
-		<Compile Include="Data_Events.cs" />
 		<Compile Include="Data_Items.cs" />
 		<Compile Include="Data_Locations.cs" />
+		<Compile Include="NarcopelagoCustomers.cs" />
+		<Compile Include="NarcopelagoDeathLink.cs" />
+		<Compile Include="NarcopelagoItems.cs" />
 		<Compile Include="NarcopelagoLocations.cs" />
 		<Compile Include="NarcopelagoMainMenu.cs" />
+		<Compile Include="NarcopelagoOptions.cs" />
 		<Compile Include="NarcopelagoQuests.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
 	</ItemGroup>

@@ -44,11 +44,6 @@
         "tags": ["Level Up Reward"],
         "modern_id": 9
     },
-    "Low-Quality Pseudo Unlock": {
-        "classification": ["PROGRESSION", "USEFUL"],
-        "tags": ["Level Up Reward"],
-        "modern_id": 10
-    },
     "Mixing Station Unlock": {
         "classification": ["PROGRESSION", "USEFUL"],
         "tags": ["Hardware Store", "Level Up Reward"],
@@ -214,11 +209,6 @@
         "tags": ["Warehouse", "Level Up Reward"],
         "modern_id": 43
     },
-    "Coca Seed Unlock": {
-        "classification": ["PROGRESSION", "USEFUL"],
-        "tags": ["Level Up Reward"],
-        "modern_id": 44
-    },
     "M1911 Pistol Unlock": {
         "classification": ["USEFUL"],
         "tags": ["Warehouse", "Level Up Reward"],
@@ -280,7 +270,7 @@
         "modern_id": 64
     },
     "Austin Steiner Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 65
     },
@@ -295,27 +285,27 @@
         "modern_id": 67
     },
     "Donna Martin Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer"],
         "modern_id": 68
     },
     "Geraldine Poon Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer"],
         "modern_id": 69
     },
     "Jessi Waters Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 70
     },
     "Kathy Henderson Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 71
     },
     "Kyle Cooley Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 72
     },
@@ -325,22 +315,22 @@
         "modern_id": 73
     },
     "Mick Lubbin Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 74
     },
     "Mrs. Ming Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer"],
         "modern_id": 75
     },
     "Peggy Myers Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer"],
         "modern_id": 76
     },
     "Peter File Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Northtown", "Customer"],
         "modern_id": 77
     },
@@ -348,11 +338,6 @@
         "classification": ["PROGRESSION", "USEFUL"],
         "tags": ["Northtown", "Customer", "Default"],
         "modern_id": 78
-    },
-    "Shirley Watts Unlocked": {
-        "classification": ["PROGRESSION", "USEFUL"],
-        "tags": ["Westville", "Customer", "Supplier"],
-        "modern_id": 79
     },
     "Charles Rowland Unlocked": {
         "classification": ["PROGRESSION_SKIP_BALANCING", "USEFUL"],
@@ -405,7 +390,7 @@
         "modern_id": 88
     },
     "Bruce Norton Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 89
     },
@@ -425,12 +410,12 @@
         "modern_id": 92
     },
     "Jeff Gilmore Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 93
     },
     "Jennifer Rivera Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 94
     },
@@ -440,12 +425,12 @@
         "modern_id": 95
     },
     "Louis Fourier Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 96
     },
     "Philip Wentworth Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 97
     },
@@ -455,12 +440,12 @@
         "modern_id": 98
     },
     "Lucy Pennington Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Downtown", "Customer"],
         "modern_id": 99
     },
     "Anna Chesterfield Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 100
     },
@@ -470,12 +455,12 @@
         "modern_id": 101
     },
     "Cranky Frank Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 102
     },
     "Genghis Barn Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 103
     },
@@ -485,12 +470,12 @@
         "modern_id": 104
     },
     "Kelly Reynolds Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 105
     },
     "Lisa Gardner Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 106
     },
@@ -500,7 +485,7 @@
         "modern_id": 107
     },
     "Marco Barone Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 108
     },
@@ -510,32 +495,32 @@
         "modern_id": 109
     },
     "Sherman Giles Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Docks", "Customer"],
         "modern_id": 110
     },
     "Alison Knight Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 111
     },
     "Carl Bundy Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 112
     },
     "Chris Sullivan Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 113
     },
     "Dennis Kennedy Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 114
     },
     "Hank Stevenson Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 115
     },
@@ -545,7 +530,7 @@
         "modern_id": 116
     },
     "Jack Knight Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 117
     },
@@ -560,22 +545,22 @@
         "modern_id": 119
     },
     "Karen Kennedy Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Suburbia", "Customer"],
         "modern_id": 120
     },
     "Fiona Hancock Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 121
     },
     "Herbert Bleuball Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 122
     },
     "Irene Meadows Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 123
     },
@@ -585,7 +570,7 @@
         "modern_id": 124
     },
     "Lily Turner Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 125
     },
@@ -595,7 +580,7 @@
         "modern_id": 126
     },
     "Pearl Moore Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 127
     },
@@ -605,14 +590,39 @@
         "modern_id": 128
     },
     "Tobias Wentworth Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 129
     },
     "Walter Cussler Unlocked": {
-        "classification": ["USEFUL"],
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Uptown", "Customer"],
         "modern_id": 130
+    },
+    "Benji Coleman Recruited": {
+        "classification": ["PROGRESSION", "USEFUL"],
+        "tags": ["Northtown", "Dealer"],
+        "modern_id": 216
+    },
+    "Albert Hoover Unlocked": {
+        "classification": ["PROGRESSION", "USEFUL"],
+        "tags": ["Northtown", "Supplier", "Default"],
+        "modern_id": 217
+    },
+    "Shirley Watts Unlocked": {
+        "classification": ["PROGRESSION", "USEFUL"],
+        "tags": ["Westville", "Supplier"],
+        "modern_id": 218
+    },
+    "Salvador Moreno Unlocked": {
+        "classification": ["PROGRESSION"],
+        "tags": ["Docks", "Supplier"],
+        "modern_id": 219
+    },
+    "Fungal Phil Unlocked": {
+        "classification": ["PROGRESSION_SKIP_BALANCING"],
+        "tags": ["Suburbia", "Supplier"],
+        "modern_id": 220
     },
     "Molly Presley Recruited": {
         "classification": ["PROGRESSION_SKIP_BALANCING"],
@@ -909,11 +919,6 @@
         "tags": ["Amazing Filler"],
         "modern_id": 191
     },
-    "Low-Quality Pseudo": {
-        "classification": ["FILLER"],
-        "tags": ["Amazing Filler"],
-        "modern_id": 192
-    },
     "Pseudo": {
         "classification": ["FILLER"],
         "tags": ["Amazing Filler"],
@@ -978,11 +983,6 @@
         "classification": ["FILLER"],
         "tags": ["Progression Skip Filler"],
         "modern_id": 205
-    },
-    "Coca Seed": {
-        "classification": ["FILLER"],
-        "tags": ["Progression Skip Filler"],
-        "modern_id": 206
     },
     "Revolver": {
         "classification": ["FILLER"],
