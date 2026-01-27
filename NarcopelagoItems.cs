@@ -105,10 +105,28 @@ namespace Narcopelago
 
         /// <summary>
         /// Checks if an item is a customer unlock item.
+        /// Uses Data_Items tags to verify it's actually a customer.
         /// </summary>
         private static bool IsCustomerUnlockItem(string itemName)
         {
-            return itemName.EndsWith(" Unlocked") && !itemName.Contains("Dealer");
+            // First check the basic format
+            if (!itemName.EndsWith(" Unlocked"))
+                return false;
+
+            // Use Data_Items to check if this item has the "Customer" tag
+            if (Data_Items.HasTag(itemName, "Customer"))
+                return true;
+
+            // Fallback: if Data_Items isn't loaded, use basic filtering
+            // Exclude known non-customer patterns
+            if (itemName.Contains("Dealer") || itemName.Contains("Recruited"))
+                return false;
+
+            // Check if it's a supplier
+            if (Data_Items.HasTag(itemName, "Supplier"))
+                return false;
+
+            return false; // Default to false if we can't verify it's a customer
         }
 
         /// <summary>
@@ -117,6 +135,17 @@ namespace Narcopelago
         private static bool IsDealerUnlockItem(string itemName)
         {
             return itemName.Contains("Dealer") && itemName.EndsWith(" Unlocked");
+        }
+
+        /// <summary>
+        /// Checks if an item is a supplier unlock item.
+        /// </summary>
+        private static bool IsSupplierUnlockItem(string itemName)
+        {
+            if (!itemName.EndsWith(" Unlocked"))
+                return false;
+
+            return Data_Items.HasTag(itemName, "Supplier");
         }
 
         #endregion

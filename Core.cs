@@ -45,23 +45,32 @@ namespace Narcopelago
             LoadDataFiles();
             
             // Subscribe to connect button - connection happens when user clicks Connect
-            NarcopelagoUI.OnConnectClicked += ConnectionHandler.HandleConnect;
-        }
+                NarcopelagoUI.OnConnectClicked += ConnectionHandler.HandleConnect;
+            }
 
-        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-        {
-            LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
-            
-            // Process any pending customer unlocks when entering a game scene
-            if (sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading")
+            public override void OnUpdate()
             {
-                if (NarcopelagoItems.IsInitialized)
+                // Process any queued customer unlocks on the main thread
+                // This is necessary because Archipelago callbacks run on background threads,
+                // but Unity/IL2CPP operations must run on the main thread
+                NarcopelagoCustomers.ProcessMainThreadQueue();
+            }
+
+            public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+            {
+                LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
+            
+                // Track if we're in a game scene
+                bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
+                NarcopelagoCustomers.SetInGameScene(isGameScene);
+            
+                // When entering a game scene, sync customer unlocks from Archipelago session
+                if (isGameScene && NarcopelagoItems.IsInitialized)
                 {
-                    LoggerInstance.Msg("Game scene detected - processing pending customer unlocks");
-                    NarcopelagoCustomers.ProcessPendingUnlocks();
+                    LoggerInstance.Msg("Game scene detected - syncing customer unlocks from Archipelago");
+                    NarcopelagoCustomers.SyncFromSession();
                 }
             }
-        }
 
         private void LoadDataFiles()
         {

@@ -7,16 +7,22 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Il2CppScheduleOne.Quests;
+
 namespace Narcopelago
 {
-    
     /// <summary>
     /// Manages Archipelago location data for Schedule I.
     /// Access location info via ConnectionHandler.CurrentSession.Locations or through this helper class.
     /// </summary>
     public static class NarcopelagoLocations
     {
+        /// <summary>
+        /// Queue of location IDs to be sent in the next batch.
+        /// </summary>
+        private static List<long> _pendingLocationChecks = new List<long>();
+        private static readonly object _pendingLock = new object();
+        private static bool _isSending = false;
+
         /// <summary>
         /// Gets the LocationCheckHelper from the current session.
         /// Returns null if not connected.
@@ -55,60 +61,121 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Marks a location as completed and sends it to the server.
-        /// Call this when the player completes a check in-game.
-        /// This runs asynchronously to avoid blocking the game.
+        /// Queues a location to be completed and sends it asynchronously.
+        /// Uses CompleteLocationChecksAsync to avoid blocking.
         /// </summary>
         /// <param name="locationId">The location ID to complete.</param>
         public static void CompleteLocation(long locationId)
         {
             if (!IsAvailable)
             {
-                MelonLogger.Warning("Cannot complete location - not connected to Archipelago");
+                MelonLogger.Warning("[Locations] Cannot complete location - not connected to Archipelago");
                 return;
             }
 
-            // Run async to avoid blocking the game
-            Task.Run(() =>
+            MelonLogger.Msg($"[Locations] Queueing location {locationId} for completion");
+            
+            lock (_pendingLock)
             {
-                try
+                if (!_pendingLocationChecks.Contains(locationId))
                 {
-                    Locations.CompleteLocationChecks(locationId);
-                    MelonLogger.Msg($"Location {locationId} completed!");
+                    _pendingLocationChecks.Add(locationId);
                 }
-                catch (Exception ex)
-                {
-                    MelonLogger.Error($"Failed to complete location {locationId}: {ex.Message}");
-                }
-            });
+            }
+
+            // Trigger send if not already sending
+            SendPendingLocationsAsync();
         }
 
         /// <summary>
-        /// Marks multiple locations as completed and sends them to the server.
-        /// This runs asynchronously to avoid blocking the game.
+        /// Queues multiple locations to be completed and sends them asynchronously.
         /// </summary>
         /// <param name="locationIds">The location IDs to complete.</param>
         public static void CompleteLocations(params long[] locationIds)
         {
             if (!IsAvailable)
             {
-                MelonLogger.Warning("Cannot complete locations - not connected to Archipelago");
+                MelonLogger.Warning("[Locations] Cannot complete locations - not connected to Archipelago");
                 return;
             }
 
-            // Run async to avoid blocking the game
-            Task.Run(() =>
+            if (locationIds == null || locationIds.Length == 0) return;
+
+            MelonLogger.Msg($"[Locations] Queueing {locationIds.Length} locations for completion");
+
+            lock (_pendingLock)
             {
-                try
+                foreach (var id in locationIds)
                 {
-                    Locations.CompleteLocationChecks(locationIds);
-                    MelonLogger.Msg($"Completed {locationIds.Length} locations!");
+                    if (!_pendingLocationChecks.Contains(id))
+                    {
+                        _pendingLocationChecks.Add(id);
+                    }
                 }
-                catch (Exception ex)
+            }
+
+            // Trigger send if not already sending
+            SendPendingLocationsAsync();
+        }
+
+        /// <summary>
+        /// Sends all pending location checks asynchronously.
+        /// </summary>
+        private static async void SendPendingLocationsAsync()
+        {
+            // Prevent multiple simultaneous sends
+            lock (_pendingLock)
+            {
+                if (_isSending || _pendingLocationChecks.Count == 0)
                 {
-                    MelonLogger.Error($"Failed to complete locations: {ex.Message}");
+                    return;
                 }
-            });
+                _isSending = true;
+            }
+
+            // Get the locations to send
+            long[] locationsToSend;
+            lock (_pendingLock)
+            {
+                locationsToSend = _pendingLocationChecks.ToArray();
+                _pendingLocationChecks.Clear();
+            }
+
+            MelonLogger.Msg($"[Locations] Sending {locationsToSend.Length} location checks...");
+
+            try
+            {
+                // Use Task.Run to send on a background thread
+                await Task.Run(() =>
+                {
+                    try
+                    {
+                        Locations.CompleteLocationChecks(locationsToSend);
+                        MelonLogger.Msg($"[Locations] Successfully completed {locationsToSend.Length} locations");
+                    }
+                    catch (Exception ex)
+                    {
+                        MelonLogger.Error($"[Locations] Error in background send: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[Locations] Error sending location checks: {ex.Message}");
+            }
+            finally
+            {
+                lock (_pendingLock)
+                {
+                    _isSending = false;
+                }
+
+                // Check if more locations were queued while we were sending
+                if (_pendingLocationChecks.Count > 0)
+                {
+                    SendPendingLocationsAsync();
+                }
+            }
         }
 
         /// <summary>
@@ -121,7 +188,7 @@ namespace Narcopelago
         {
             if (!IsAvailable)
             {
-                MelonLogger.Warning("Cannot scout location - not connected to Archipelago");
+                MelonLogger.Warning("[Locations] Cannot scout location - not connected to Archipelago");
                 return null;
             }
 
@@ -132,7 +199,7 @@ namespace Narcopelago
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"Failed to scout location {locationId}: {ex.Message}");
+                MelonLogger.Error($"[Locations] Failed to scout location {locationId}: {ex.Message}");
                 return null;
             }
         }
@@ -162,13 +229,26 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Resets the pending location checks.
+        /// Call this when disconnecting.
+        /// </summary>
+        public static void Reset()
+        {
+            lock (_pendingLock)
+            {
+                _pendingLocationChecks.Clear();
+                _isSending = false;
+            }
+        }
+
+        /// <summary>
         /// Logs all location information for debugging purposes.
         /// </summary>
         public static void LogAllLocations()
         {
             if (!IsAvailable)
             {
-                MelonLogger.Msg("Cannot log locations - not connected");
+                MelonLogger.Msg("[Locations] Cannot log locations - not connected");
                 return;
             }
 

@@ -79,6 +79,11 @@ namespace Narcopelago
         public static bool Randomize_level_unlocks { get; private set; } = false;
 
         /// <summary>
+        /// Randomize Level Unlocks
+        /// </summary>
+        public static bool Randomize_suppliers { get; private set; } = false;
+
+        /// <summary>
         /// if Deathlink is enabled or not
         /// </summary>
         public static bool Deathlink { get; private set; } = false;
@@ -124,7 +129,8 @@ namespace Narcopelago
                 Recipe_checks = GetInt(slotData, "recipe_checks", 0);
                 Cash_for_trash = GetInt(slotData, "cash_for_trash", 0);
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
-                Deathlink = GetBool(slotData, "deathlink", false);
+                Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
+                Deathlink = GetBool(slotData, "death_link", false);
 
                 IsLoaded = true;
                 LogOptions();
@@ -164,7 +170,8 @@ namespace Narcopelago
                 Recipe_checks = GetInt(slotData, "recipe_checks", 0);
                 Cash_for_trash = GetInt(slotData, "cash_for_trash", 0);
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
-                Deathlink = GetBool(slotData, "deathlink", false);
+                Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
+                Deathlink = GetBool(slotData, "death_link", false);
 
                 IsLoaded = true;
                 LogOptions();
@@ -191,6 +198,7 @@ namespace Narcopelago
             Recipe_checks = 0;
             Cash_for_trash = 0;
             Randomize_level_unlocks = false;
+            Randomize_suppliers = false;
             Deathlink = false;
         }
 
@@ -210,6 +218,7 @@ namespace Narcopelago
             MelonLogger.Msg($"  Recipe_checks: {Recipe_checks}");
             MelonLogger.Msg($"  Cash_for_trash: {Cash_for_trash}");
             MelonLogger.Msg($"  Randomize_level_unlocks: {Randomize_level_unlocks}");
+            MelonLogger.Msg($"  Randomize_suppliers: {Randomize_suppliers}");
             MelonLogger.Msg($"  DeathLink: {Deathlink}");
         }
 
