@@ -224,22 +224,86 @@ namespace Narcopelago
                 }
 
                 /// <summary>
-                /// Gets all locations with a specific tag.
-                /// </summary>
-                public static List<string> GetLocationsByTag(string tag)
-                {
-                    var result = new List<string>();
-                    if (Locations == null) return result;
-
-                    foreach (var kvp in Locations)
-                    {
-                        if (kvp.Value.Tags?.Contains(tag) == true)
+                        /// Gets all locations with a specific tag.
+                        /// </summary>
+                        public static List<string> GetLocationsByTag(string tag)
                         {
-                            result.Add(kvp.Key);
+                            var result = new List<string>();
+                            if (Locations == null) return result;
+
+                            foreach (var kvp in Locations)
+                            {
+                                if (kvp.Value.Tags?.Contains(tag) == true)
+                                {
+                                    result.Add(kvp.Key);
+                                }
+                            }
+                            return result;
+                        }
+
+                        /// <summary>
+                        /// Gets all dealer recruit location names.
+                        /// These are locations with names starting with "Recruit " and containing "Dealer:" and tagged as "Dealer"
+                        /// </summary>
+                        public static List<string> GetAllDealerRecruitLocations()
+                        {
+                            var result = new List<string>();
+                            if (Locations == null) return result;
+
+                            foreach (var kvp in Locations)
+                            {
+                                if (kvp.Key.StartsWith("Recruit ", StringComparison.OrdinalIgnoreCase) &&
+                                    kvp.Key.Contains("Dealer:") &&
+                                    kvp.Value.Tags?.Contains("Dealer") == true)
+                                {
+                                    result.Add(kvp.Key);
+                                }
+                            }
+                            return result;
+                        }
+
+                        /// <summary>
+                        /// Gets the dealer name from a recruit location name.
+                        /// E.g., "Recruit Westville Dealer: Molly Presley" -> "Molly Presley"
+                        /// </summary>
+                        public static string GetDealerNameFromRecruitLocation(string locationName)
+                        {
+                            // Format: "Recruit <Region> Dealer: <DealerName>"
+                            const string dealerMarker = "Dealer: ";
+                            int index = locationName.IndexOf(dealerMarker, StringComparison.OrdinalIgnoreCase);
+                            if (index >= 0)
+                            {
+                                return locationName.Substring(index + dealerMarker.Length).Trim();
+                            }
+                            return null;
+                        }
+
+                        /// <summary>
+                        /// Gets the recruit location name for a dealer by searching for a matching location.
+                        /// E.g., "Molly Presley" -> "Recruit Westville Dealer: Molly Presley"
+                        /// </summary>
+                        public static string GetRecruitLocationForDealer(string dealerName)
+                        {
+                            if (Locations == null) return null;
+
+                            foreach (var kvp in Locations)
+                            {
+                                if (kvp.Key.Contains($"Dealer: {dealerName}") &&
+                                    kvp.Value.Tags?.Contains("Dealer") == true)
+                                {
+                                    return kvp.Key;
+                                }
+                            }
+                            return null;
+                        }
+
+                        /// <summary>
+                        /// Checks if a location exists for a given dealer.
+                        /// </summary>
+                        public static bool HasLocationForDealer(string dealerName)
+                        {
+                            return GetRecruitLocationForDealer(dealerName) != null;
                         }
                     }
-                    return result;
                 }
-            }
-        }
 

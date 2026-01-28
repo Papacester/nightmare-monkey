@@ -90,6 +90,10 @@ namespace Narcopelago
             {
                 HandleCustomerUnlock(itemName);
             }
+            else if (IsDealerRecruitItem(itemName))
+            {
+                HandleDealerRecruit(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -138,6 +142,17 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Checks if an item is a dealer recruitment item (e.g., "Molly Presley Recruited").
+        /// </summary>
+        private static bool IsDealerRecruitItem(string itemName)
+        {
+            if (!itemName.EndsWith(" Recruited"))
+                return false;
+
+            return Data_Items.HasTag(itemName, "Dealer");
+        }
+
+        /// <summary>
         /// Checks if an item is a supplier unlock item.
         /// </summary>
         private static bool IsSupplierUnlockItem(string itemName)
@@ -160,6 +175,16 @@ namespace Narcopelago
             string customerName = itemName.Replace(" Unlocked", "").Trim();
             MelonLogger.Msg($"[Items] Unlocking customer: {customerName}");
             NarcopelagoCustomers.SetCustomerUnlocked(customerName);
+        }
+
+        /// <summary>
+        /// Handle receiving a dealer recruitment item (e.g., "Molly Presley Recruited").
+        /// </summary>
+        private static void HandleDealerRecruit(string itemName)
+        {
+            string dealerName = itemName.Replace(" Recruited", "").Trim();
+            MelonLogger.Msg($"[Items] Recruiting dealer: {dealerName}");
+            NarcopelagoDealers.SetDealerRecruited(dealerName);
         }
 
         #endregion

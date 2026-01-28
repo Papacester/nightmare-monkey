@@ -54,6 +54,9 @@ namespace Narcopelago
                 // This is necessary because Archipelago callbacks run on background threads,
                 // but Unity/IL2CPP operations must run on the main thread
                 NarcopelagoCustomers.ProcessMainThreadQueue();
+                
+                // Process any queued dealer recruitments on the main thread
+                NarcopelagoDealers.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -63,12 +66,14 @@ namespace Narcopelago
                 // Track if we're in a game scene
                 bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
                 NarcopelagoCustomers.SetInGameScene(isGameScene);
+                NarcopelagoDealers.SetInGameScene(isGameScene);
             
-                // When entering a game scene, sync customer unlocks from Archipelago session
+                // When entering a game scene, sync customer/dealer unlocks from Archipelago session
                 if (isGameScene && NarcopelagoItems.IsInitialized)
                 {
-                    LoggerInstance.Msg("Game scene detected - syncing customer unlocks from Archipelago");
+                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer unlocks from Archipelago");
                     NarcopelagoCustomers.SyncFromSession();
+                    NarcopelagoDealers.SyncFromSession();
                 }
             }
 

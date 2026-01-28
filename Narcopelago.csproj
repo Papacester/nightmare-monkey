@@ -506,6 +506,7 @@
 		<Compile Include="Data_Items.cs" />
 		<Compile Include="Data_Locations.cs" />
 		<Compile Include="NarcopelagoCustomers.cs" />
+		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
 		<Compile Include="NarcopelagoItems.cs" />
 		<Compile Include="NarcopelagoLocations.cs" />
