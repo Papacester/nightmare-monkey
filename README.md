@@ -1,4 +1,10 @@
-Second pre-release. Sends checks from all missions. Sends and receives all customer checks and items. Customers can be unlocked by receiving them through archipelago when randomize_customers is true in the YAML. checks for samples will be sent no matter the settings and are functional.
+Current Functionality
+Sends checks from all missions. 
+Sends and receives all customer checks and items. 
+Customers can be unlocked by receiving them through archipelago when randomize_customers is true in the YAML.
+checks for samples will be sent no matter the settings and are functional.
+Dealers will send checks when recruiting regardless of settings.
+Dealer AP unlock will allow user to then recruit them in game. Check is still possible when having them as a possible contact.
 
 To install:
 
