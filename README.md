@@ -1,16 +1,19 @@
-Current Functionality
-Sends checks from all missions. 
-Sends and receives all customer checks and items. 
-Customers can be unlocked by receiving them through archipelago when randomize_customers is true in the YAML.
-checks for samples will be sent no matter the settings and are functional.
-Dealers will send checks when recruiting regardless of settings.
-Dealer AP unlock will allow user to then recruit them in game. Check is still possible when having them as a possible contact.
-
-To install:
-
-Install Archipelago https://archipelago.gg/tutorial/Archipelago/setup_en
-Install APWorld. https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.3
-Install Melonloader found here https://melonwiki.xyz/#/
-Launch game and confirm MelonLoader console opens
-Unzip Narcopelgo zip into steamapps\common\Schedule I\mods . This folder can also be found by right clicking on the game on steam->Manage->Browse local files. In there should be the mods folder.
+Current Functionality<br>
+Sends checks from all missions. <br>
+Sends and receives all customer checks and items. <br>
+Customers can be unlocked by receiving them through archipelago when randomize_customers is true in the YAML.<br>
+checks for samples will be sent no matter the settings and are functional.<br>
+Dealers will send checks when recruiting regardless of settings.<br>
+Dealer AP unlock will allow user to then recruit them in game. Check is still possible when having them as a possible contact.<br>
+Suppliers will not be unlockable if suppliers are randomized and only unlocked through ap items <br>
+Suppliers give checks for unlocking them when suppliers are not randomized<br>
+<br>
+<br>
+To install:<br>
+<br>
+Install Archipelago https://archipelago.gg/tutorial/Archipelago/setup_en<br>
+Install APWorld. [https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.4](https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.4)<br>
+Install Melonloader found here https://melonwiki.xyz/#/<br>
+Launch game and confirm MelonLoader console opens<br>
+Unzip Narcopelgo zip into steamapps\common\Schedule I\mods . This folder can also be found by right clicking on the game on steam->Manage->Browse local files. In there should be the mods folder.<br>
 Play!
