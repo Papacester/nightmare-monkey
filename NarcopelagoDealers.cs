@@ -16,20 +16,20 @@ namespace Narcopelago
     {
         /// <summary>
         /// Tracks which dealers have been recruited (location check completed).
-        /// Key: Dealer name, Value: true if recruitment location was checked
+        /// Key: Dealer name (normalized), Value: true if recruitment location was checked
         /// </summary>
-        private static Dictionary<string, bool> _dealerRecruitStatus = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, bool> _dealerRecruitStatus = new Dictionary<string, bool>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Tracks which dealers have been unlocked via Archipelago items.
-        /// Key: Dealer name, Value: true if "DealerName Recruited" item received
+        /// Key: Dealer name (normalized), Value: true if "DealerName Recruited" item received
         /// </summary>
-        private static Dictionary<string, bool> _dealerUnlockStatus = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, bool> _dealerUnlockStatus = new Dictionary<string, bool>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Tracks dealers that need to be recruited once the game scene is loaded.
         /// </summary>
-        private static HashSet<string> _pendingRecruits = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static HashSet<string> _pendingRecruits = new HashSet<string>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Thread-safe queue for dealer recruitments that need to be processed on the main thread.
@@ -362,7 +362,7 @@ namespace Narcopelago
                     if (dealer == null) continue;
 
                     string name = dealer.fullName ?? dealer.FirstName ?? "";
-                    if (string.Equals(name, dealerName, StringComparison.OrdinalIgnoreCase))
+                    if (StringHelper.EqualsNormalized(name, dealerName))
                     {
                         if (!dealer.IsRecruited)
                         {
@@ -409,7 +409,7 @@ namespace Narcopelago
                     if (dealer == null) continue;
 
                     string name = dealer.fullName ?? dealer.FirstName ?? "";
-                    if (string.Equals(name, dealerName, StringComparison.OrdinalIgnoreCase))
+                    if (StringHelper.EqualsNormalized(name, dealerName))
                     {
                         return dealer.IsRecruited;
                     }

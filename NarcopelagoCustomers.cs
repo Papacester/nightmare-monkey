@@ -20,20 +20,20 @@ namespace Narcopelago
     {
         /// <summary>
         /// Tracks which customers have been given a successful sample.
-        /// Key: Customer name, Value: true if sample was successful
+        /// Key: Customer name (normalized), Value: true if sample was successful
         /// </summary>
-        private static Dictionary<string, bool> _customerSampleStatus = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, bool> _customerSampleStatus = new Dictionary<string, bool>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Tracks which customers have been unlocked via Archipelago items.
-        /// Key: Customer name, Value: true if unlock item received
+        /// Key: Customer name (normalized), Value: true if unlock item received
         /// </summary>
-        private static Dictionary<string, bool> _customerUnlockStatus = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, bool> _customerUnlockStatus = new Dictionary<string, bool>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Tracks customers that need to be unlocked once the game scene is loaded.
         /// </summary>
-        private static HashSet<string> _pendingUnlocks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static HashSet<string> _pendingUnlocks = new HashSet<string>(NormalizedStringComparer.Instance);
 
         /// <summary>
         /// Thread-safe queue for customer unlocks that need to be processed on the main thread.
@@ -347,7 +347,7 @@ namespace Narcopelago
                     if (customer == null || customer.NPC == null) continue;
                     
                     string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
-                    if (string.Equals(name, customerName, StringComparison.OrdinalIgnoreCase))
+                    if (StringHelper.EqualsNormalized(name, customerName))
                     {
                         MelonLogger.Msg($"[Customers] '{customerName}' already unlocked in-game");
                         return true;
@@ -360,7 +360,7 @@ namespace Narcopelago
                     if (customer == null || customer.NPC == null) continue;
                     
                     string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
-                    if (string.Equals(name, customerName, StringComparison.OrdinalIgnoreCase))
+                    if (StringHelper.EqualsNormalized(name, customerName))
                     {
                         var relationData = customer.NPC.RelationData;
                         if (relationData != null && !relationData.Unlocked)
@@ -460,7 +460,7 @@ namespace Narcopelago
                 foreach (var requiredCustomer in requiredUnlocks)
                 {
                     // Skip self-reference
-                    if (string.Equals(requiredCustomer, customerName, StringComparison.OrdinalIgnoreCase))
+                    if (StringHelper.EqualsNormalized(requiredCustomer, customerName))
                         continue;
                         
                     // Check if this connection is unlocked (via AP or in-game)
@@ -486,7 +486,7 @@ namespace Narcopelago
                     {
                         if (customer == null || customer.NPC == null) continue;
                         string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
-                        if (string.Equals(name, customerName, StringComparison.OrdinalIgnoreCase))
+                        if (StringHelper.EqualsNormalized(name, customerName))
                         {
                             return true;
                         }
@@ -497,7 +497,7 @@ namespace Narcopelago
                     {
                         if (customer == null || customer.NPC == null) continue;
                         string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
-                        if (string.Equals(name, customerName, StringComparison.OrdinalIgnoreCase))
+                        if (StringHelper.EqualsNormalized(name, customerName))
                         {
                             // Found in locked list - check actual RelationData in case lists are stale
                             return customer.NPC.RelationData?.Unlocked ?? false;

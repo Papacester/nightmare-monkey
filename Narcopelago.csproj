@@ -513,7 +513,9 @@
 		<Compile Include="NarcopelagoMainMenu.cs" />
 		<Compile Include="NarcopelagoOptions.cs" />
 		<Compile Include="NarcopelagoQuests.cs" />
+		<Compile Include="NarcopelagoSuppliers.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
+		<Compile Include="StringHelper.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

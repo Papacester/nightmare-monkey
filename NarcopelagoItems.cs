@@ -94,6 +94,10 @@ namespace Narcopelago
             {
                 HandleDealerRecruit(itemName);
             }
+            else if (IsSupplierUnlockItem(itemName))
+            {
+                HandleSupplierUnlock(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -185,6 +189,16 @@ namespace Narcopelago
             string dealerName = itemName.Replace(" Recruited", "").Trim();
             MelonLogger.Msg($"[Items] Recruiting dealer: {dealerName}");
             NarcopelagoDealers.SetDealerRecruited(dealerName);
+        }
+
+        /// <summary>
+        /// Handle receiving a supplier unlock item (e.g., "Shirley Watts Unlocked").
+        /// </summary>
+        private static void HandleSupplierUnlock(string itemName)
+        {
+            string supplierName = itemName.Replace(" Unlocked", "").Trim();
+            MelonLogger.Msg($"[Items] Unlocking supplier: {supplierName}");
+            NarcopelagoSuppliers.SetSupplierUnlocked(supplierName);
         }
 
         #endregion

@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.1.0", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "0.1.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -57,6 +57,9 @@ namespace Narcopelago
                 
                 // Process any queued dealer recruitments on the main thread
                 NarcopelagoDealers.ProcessMainThreadQueue();
+                
+                // Process any queued supplier unlocks on the main thread
+                NarcopelagoSuppliers.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -67,13 +70,15 @@ namespace Narcopelago
                 bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
                 NarcopelagoCustomers.SetInGameScene(isGameScene);
                 NarcopelagoDealers.SetInGameScene(isGameScene);
+                NarcopelagoSuppliers.SetInGameScene(isGameScene);
             
-                // When entering a game scene, sync customer/dealer unlocks from Archipelago session
+                // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago session
                 if (isGameScene && NarcopelagoItems.IsInitialized)
                 {
-                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer unlocks from Archipelago");
+                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer/supplier unlocks from Archipelago");
                     NarcopelagoCustomers.SyncFromSession();
                     NarcopelagoDealers.SyncFromSession();
+                    NarcopelagoSuppliers.SyncFromSession();
                 }
             }
 

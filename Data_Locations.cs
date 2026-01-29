@@ -112,14 +112,70 @@ namespace Narcopelago
         }
 
         /// <summary>
-                /// Gets a modern_id by location name
-                /// </summary>
-                public static int GetLocationId(string name)
-                {
-                    if (NameToId != null && NameToId.TryGetValue(name, out var id))
-                        return id;
-                    return -1;
-                }
+        /// Gets a modern_id by location name.
+        /// Uses normalized comparison to handle accented characters.
+        /// </summary>
+        public static int GetLocationId(string name)
+        {
+            if (NameToId == null || string.IsNullOrEmpty(name)) return -1;
+                    
+            // Try exact match first
+            if (NameToId.TryGetValue(name, out var id))
+                return id;
+                    
+            // Try normalized match for accented characters
+            foreach (var kvp in NameToId)
+            {
+                if (StringHelper.EqualsNormalized(kvp.Key, name))
+                    return kvp.Value;
+            }
+                    
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets a location by name.
+        /// Uses normalized comparison to handle accented characters.
+        /// </summary>
+        public static LocationData GetLocationNormalized(string name)
+        {
+            if (Locations == null || string.IsNullOrEmpty(name)) return null;
+                    
+            // Try exact match first
+            if (Locations.TryGetValue(name, out var location))
+                return location;
+                    
+            // Try normalized match for accented characters
+            foreach (var kvp in Locations)
+            {
+                if (StringHelper.EqualsNormalized(kvp.Key, name))
+                    return kvp.Value;
+            }
+                    
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the actual location name in the data that matches the given name.
+        /// Useful for getting the correct key when names have accented characters.
+        /// </summary>
+        public static string FindMatchingLocationName(string name)
+        {
+            if (Locations == null || string.IsNullOrEmpty(name)) return null;
+                    
+            // Try exact match first
+            if (Locations.ContainsKey(name))
+                return name;
+                    
+            // Try normalized match for accented characters
+            foreach (var kvp in Locations)
+            {
+                if (StringHelper.EqualsNormalized(kvp.Key, name))
+                    return kvp.Key;
+            }
+                    
+            return null;
+        }
 
                 /// <summary>
                 /// Gets all customer sample location names.
@@ -156,11 +212,33 @@ namespace Narcopelago
 
                 /// <summary>
                 /// Gets the sample location name for a customer.
-                /// E.g., "Beth Penn" -> "Successful Sample: Beth Penn"
+                /// Uses normalized comparison to find matching locations with accented characters.
+                /// E.g., "Javier Pérez" will find "Successful Sample: Javier PeÌrez" (corrupted encoding)
                 /// </summary>
                 public static string GetSampleLocationForCustomer(string customerName)
                 {
-                    return $"Successful Sample: {customerName}";
+                    if (Locations == null || string.IsNullOrEmpty(customerName)) return null;
+                    
+                    // Try exact match first
+                    string exactName = $"Successful Sample: {customerName}";
+                    if (Locations.ContainsKey(exactName))
+                        return exactName;
+                    
+                    // Try normalized match for accented characters
+                    string normalizedCustomer = StringHelper.NormalizeForComparison(customerName);
+                    foreach (var kvp in Locations)
+                    {
+                        if (kvp.Key.StartsWith("Successful Sample: ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string locationCustomerName = kvp.Key.Substring("Successful Sample: ".Length);
+                            if (StringHelper.NormalizeForComparison(locationCustomerName) == normalizedCustomer)
+                            {
+                                return kvp.Key;
+                            }
+                        }
+                    }
+                    
+                    return null;
                 }
 
                 /// <summary>
@@ -298,12 +376,68 @@ namespace Narcopelago
                         }
 
                         /// <summary>
-                        /// Checks if a location exists for a given dealer.
-                        /// </summary>
-                        public static bool HasLocationForDealer(string dealerName)
-                        {
-                            return GetRecruitLocationForDealer(dealerName) != null;
+                                /// Checks if a location exists for a given dealer.
+                                /// </summary>
+                                public static bool HasLocationForDealer(string dealerName)
+                                {
+                                    return GetRecruitLocationForDealer(dealerName) != null;
+                                }
+
+                                /// <summary>
+                                /// Gets all supplier befriend location names.
+                                /// These are locations with names starting with "Befriend Supplier: " and tagged as "Supplier"
+                                /// </summary>
+                                public static List<string> GetAllSupplierBefriendLocations()
+                                {
+                                    var result = new List<string>();
+                                    if (Locations == null) return result;
+
+                                    foreach (var kvp in Locations)
+                                    {
+                                        if (kvp.Key.StartsWith("Befriend Supplier: ", StringComparison.OrdinalIgnoreCase) &&
+                                            kvp.Value.Tags?.Contains("Supplier") == true)
+                                        {
+                                            result.Add(kvp.Key);
+                                        }
+                                    }
+                                    return result;
+                                }
+
+                                /// <summary>
+                                /// Gets the supplier name from a befriend location name.
+                                /// E.g., "Befriend Supplier: Shirley Watts" -> "Shirley Watts"
+                                /// </summary>
+                                public static string GetSupplierNameFromBefriendLocation(string locationName)
+                                {
+                                    const string prefix = "Befriend Supplier: ";
+                                    if (locationName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        return locationName.Substring(prefix.Length).Trim();
+                                    }
+                                    return null;
+                                }
+
+                                /// <summary>
+                                /// Gets the befriend location name for a supplier.
+                                /// E.g., "Shirley Watts" -> "Befriend Supplier: Shirley Watts"
+                                /// </summary>
+                                public static string GetBefriendLocationForSupplier(string supplierName)
+                                {
+                                    string locationName = $"Befriend Supplier: {supplierName}";
+                                    if (Locations != null && Locations.ContainsKey(locationName))
+                                    {
+                                        return locationName;
+                                    }
+                                    return null;
+                                }
+
+                                /// <summary>
+                                /// Checks if a location exists for a given supplier.
+                                /// </summary>
+                                public static bool HasLocationForSupplier(string supplierName)
+                                {
+                                    return GetBefriendLocationForSupplier(supplierName) != null;
+                                }
+                            }
                         }
-                    }
-                }
 
