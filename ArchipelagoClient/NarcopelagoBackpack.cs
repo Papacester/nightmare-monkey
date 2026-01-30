@@ -447,16 +447,16 @@ namespace Narcopelago
         public override void OnUpdate()
         {
             // Debug: add items with F6
-            if (Input.GetKeyDown(KeyCode.F6))
-            {
-                BackpackSystem.Pending.Enqueue(new APItem("soil", "Soil", 10));
-                BackpackSystem.Pending.Enqueue(new APItem("ogkush", "OG Kush", 1));
-                BackpackSystem.Pending.Enqueue(new APItem("ogkush", "OG Kush", 100));
-                BackpackSystem.Pending.Enqueue(new APItem("goldenskateboard", "Golden Skateboard", 1));
-                BackpackSystem.Pending.Enqueue(new APItem("goldenskateboard", "Golden Skateboard", 2));
+            //if (Input.GetKeyDown(KeyCode.F6))
+            //{
+                //BackpackSystem.Pending.Enqueue(new APItem("soil", "Soil", 10));
+                //BackpackSystem.Pending.Enqueue(new APItem("ogkush", "OG Kush", 1));
+                //BackpackSystem.Pending.Enqueue(new APItem("ogkush", "OG Kush", 100));
+                //BackpackSystem.Pending.Enqueue(new APItem("goldenskateboard", "Golden Skateboard", 1));
+                //BackpackSystem.Pending.Enqueue(new APItem("goldenskateboard", "Golden Skateboard", 2));
 
-                MelonLogger.Msg("[APBackpack] Debug items added.");
-            }
+                //MelonLogger.Msg("[APBackpack] Debug items added.");
+            //}
 
             if (_popupTimer > 0f)
             {
