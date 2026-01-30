@@ -432,12 +432,62 @@ namespace Narcopelago
                                 }
 
                                 /// <summary>
-                                /// Checks if a location exists for a given supplier.
-                                /// </summary>
-                                public static bool HasLocationForSupplier(string supplierName)
-                                {
-                                    return GetBefriendLocationForSupplier(supplierName) != null;
+                                        /// Checks if a location exists for a given supplier.
+                                        /// </summary>
+                                        public static bool HasLocationForSupplier(string supplierName)
+                                        {
+                                            return GetBefriendLocationForSupplier(supplierName) != null;
+                                        }
+
+                                        /// <summary>
+                                        /// Gets the location ID for a cartel influence check.
+                                        /// E.g., GetCartelInfluenceLocationId("Westville", 3) -> ID for "Westville cartel influence 3"
+                                        /// </summary>
+                                        public static int GetCartelInfluenceLocationId(string region, int checkNumber)
+                                        {
+                                            string locationName = $"{region} cartel influence {checkNumber}";
+                                            return GetLocationId(locationName);
+                                        }
+
+                                        /// <summary>
+                                        /// Gets all cartel influence location names for a specific region.
+                                        /// </summary>
+                                        public static List<string> GetCartelInfluenceLocationsForRegion(string region)
+                                        {
+                                            var result = new List<string>();
+                                            if (Locations == null) return result;
+
+                                            string prefix = $"{region} cartel influence ";
+                                            foreach (var kvp in Locations)
+                                            {
+                                                if (kvp.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    result.Add(kvp.Key);
+                                                }
+                                            }
+                                            return result;
+                                        }
+
+                                        /// <summary>
+                                        /// Gets the number of completed cartel influence checks for a region based on Archipelago data.
+                                        /// </summary>
+                                        public static int GetCompletedCartelInfluenceCount(string region)
+                                        {
+                                            int count = 0;
+                                            for (int i = 1; i <= 7; i++)
+                                            {
+                                                int locationId = GetCartelInfluenceLocationId(region, i);
+                                                if (locationId > 0 && NarcopelagoLocations.AllLocationsChecked?.Contains(locationId) == true)
+                                                {
+                                                    count++;
+                                                }
+                                                else
+                                                {
+                                                    break; // Stop at first uncompleted
+                                                }
+                                            }
+                                            return count;
+                                        }
+                                    }
                                 }
-                            }
-                        }
 

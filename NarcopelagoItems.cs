@@ -98,6 +98,10 @@ namespace Narcopelago
             {
                 HandleSupplierUnlock(itemName);
             }
+            else if (IsCartelInfluenceItem(itemName))
+            {
+                HandleCartelInfluence(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -167,6 +171,17 @@ namespace Narcopelago
             return Data_Items.HasTag(itemName, "Supplier");
         }
 
+        /// <summary>
+        /// Checks if an item is a cartel influence item (e.g., "Cartel Influence, Westville").
+        /// </summary>
+        private static bool IsCartelInfluenceItem(string itemName)
+        {
+            if (!itemName.StartsWith("Cartel Influence, "))
+                return false;
+
+            return Data_Items.HasTag(itemName, "Cartel Influence");
+        }
+
         #endregion
 
         #region Item Handlers
@@ -199,6 +214,16 @@ namespace Narcopelago
             string supplierName = itemName.Replace(" Unlocked", "").Trim();
             MelonLogger.Msg($"[Items] Unlocking supplier: {supplierName}");
             NarcopelagoSuppliers.SetSupplierUnlocked(supplierName);
+        }
+
+        /// <summary>
+        /// Handle receiving a cartel influence item (e.g., "Cartel Influence, Westville").
+        /// </summary>
+        private static void HandleCartelInfluence(string itemName)
+        {
+            string region = itemName.Replace("Cartel Influence, ", "").Trim();
+            MelonLogger.Msg($"[Items] Reducing cartel influence in: {region}");
+            NarcopelagoCartelInfluence.OnInfluenceItemReceived(region);
         }
 
         #endregion
