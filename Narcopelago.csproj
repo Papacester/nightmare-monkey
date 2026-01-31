@@ -508,6 +508,7 @@
 		<Compile Include="NarcopelagoAPContacts.cs" />
 		<Compile Include="NarcopelagoBundles.cs" />
 		<Compile Include="NarcopelagoCartelInfluence.cs" />
+		<Compile Include="NarcopelagoCashForTrash.cs" />
 		<Compile Include="NarcopelagoCustomers.cs" />
 		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
@@ -518,6 +519,8 @@
 		<Compile Include="NarcopelagoMainMenu.cs" />
 		<Compile Include="NarcopelagoOptions.cs" />
 		<Compile Include="NarcopelagoQuests.cs" />
+		<Compile Include="NarcopelagoRealtor.cs" />
+		<Compile Include="NarcopelagoRecipeChecks.cs" />
 		<Compile Include="NarcopelagoSuppliers.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
 		<Compile Include="StringHelper.cs" />

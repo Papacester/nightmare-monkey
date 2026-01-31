@@ -114,6 +114,10 @@ namespace Narcopelago
             {
                 HandleXPBundle(itemName);
             }
+            else if (IsPropertyItem(itemName))
+            {
+                HandlePropertyItem(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -203,6 +207,15 @@ namespace Narcopelago
             return Data_Items.HasTag(itemName, "Level Up Reward");
         }
 
+        /// <summary>
+        /// Checks if an item is a property or business item.
+        /// </summary>
+        private static bool IsPropertyItem(string itemName)
+        {
+            return Data_Items.HasTag(itemName, "Drug Making Property") || 
+                   Data_Items.HasTag(itemName, "Business Property");
+        }
+
         #endregion
 
         #region Item Handlers
@@ -273,6 +286,15 @@ namespace Narcopelago
         {
             MelonLogger.Msg($"[Items] Processing XP bundle: {itemName}");
             NarcopelagoBundles.OnXPBundleReceived();
+        }
+
+        /// <summary>
+        /// Handle receiving a property or business item.
+        /// </summary>
+        private static void HandlePropertyItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing property item: {itemName}");
+            NarcopelagoRealtor.OnPropertyItemReceived(itemName);
         }
 
         #endregion

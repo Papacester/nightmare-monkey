@@ -78,6 +78,15 @@ namespace Narcopelago
                 
                 // Process any queued bundle rewards (cash/XP) on the main thread
                 NarcopelagoBundles.ProcessMainThreadQueue();
+                
+                // Process any queued cash-for-trash location checks on the main thread
+                NarcopelagoCashForTrash.ProcessMainThreadQueue();
+                
+                // Process any queued recipe check locations on the main thread
+                NarcopelagoRecipeChecks.ProcessMainThreadQueue();
+                
+                // Process any queued property/business unlocks on the main thread
+                NarcopelagoRealtor.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -94,6 +103,9 @@ namespace Narcopelago
                 NarcopelagoGoal.SetInGameScene(isGameScene);
                 NarcopelagoAPContacts.SetInGameScene(isGameScene);
                 NarcopelagoBundles.SetInGameScene(isGameScene);
+                NarcopelagoCashForTrash.SetInGameScene(isGameScene);
+                NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
+                NarcopelagoRealtor.SetInGameScene(isGameScene);
             
                 // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
                 if (isGameScene && NarcopelagoItems.IsInitialized)
@@ -106,6 +118,9 @@ namespace Narcopelago
                     NarcopelagoLevels.SyncFromSession();
                     NarcopelagoGoal.SyncFromSession();
                     NarcopelagoBundles.SyncFromSession();
+                    NarcopelagoCashForTrash.SyncFromSession();
+                    NarcopelagoRecipeChecks.SyncFromSession();
+                    NarcopelagoRealtor.SyncFromSession();
                 }
             }
 
