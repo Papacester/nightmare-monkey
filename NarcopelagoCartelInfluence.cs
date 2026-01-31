@@ -65,6 +65,18 @@ namespace Narcopelago
         private static readonly string[] ValidRegions = { "Westville", "Downtown", "Docks", "Suburbia", "Uptown" };
 
         /// <summary>
+        /// Starting influence for each region. Westville starts at 0.5, others at 1.0.
+        /// </summary>
+        private static float GetStartingInfluenceForRegion(string region)
+        {
+            if (string.Equals(region, "Westville", StringComparison.OrdinalIgnoreCase))
+            {
+                return 0.5f;
+            }
+            return 1.0f;
+        }
+
+        /// <summary>
         /// Sets whether we're in a game scene. Call this from Core when scene changes.
         /// </summary>
         public static void SetInGameScene(bool inGame)
@@ -327,8 +339,10 @@ namespace Narcopelago
                 // Update our tracking
                 _influenceItemsReceived[region] = itemCount;
 
-                // Calculate target influence (1.0 - 0.1 * itemCount), clamped to 0
-                float targetInfluence = Math.Max(0f, 1.0f - (itemCount * 0.1f));
+                // Calculate target influence based on starting influence for this region
+                // Westville starts at 0.5, others at 1.0
+                float startingInfluence = GetStartingInfluenceForRegion(region);
+                float targetInfluence = Math.Max(0f, startingInfluence - (itemCount * 0.1f));
 
                 // Apply the influence
                 EnforceInfluenceLevel(region, targetInfluence);
@@ -455,11 +469,14 @@ namespace Narcopelago
 
         /// <summary>
         /// Gets the minimum allowed influence for a region based on items received.
+        /// Westville starts at 0.5, other regions start at 1.0.
+        /// Each item allows 0.1 reduction from the starting point.
         /// </summary>
         public static float GetMinimumInfluenceForRegion(string region)
         {
             int itemsReceived = GetInfluenceItemsReceived(region);
-            float minInfluence = 1.0f - (itemsReceived * 0.1f);
+            float startingInfluence = GetStartingInfluenceForRegion(region);
+            float minInfluence = startingInfluence - (itemsReceived * 0.1f);
             return Math.Max(0f, minInfluence);
         }
 

@@ -510,6 +510,7 @@
 		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
 		<Compile Include="NarcopelagoItems.cs" />
+		<Compile Include="NarcopelagoLevels.cs" />
 		<Compile Include="NarcopelagoLocations.cs" />
 		<Compile Include="NarcopelagoMainMenu.cs" />
 		<Compile Include="NarcopelagoOptions.cs" />

@@ -102,6 +102,10 @@ namespace Narcopelago
             {
                 HandleCartelInfluence(itemName);
             }
+            else if (IsLevelUpRewardItem(itemName))
+            {
+                HandleLevelUpReward(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -182,6 +186,15 @@ namespace Narcopelago
             return Data_Items.HasTag(itemName, "Cartel Influence");
         }
 
+        /// <summary>
+        /// Checks if an item is a level up reward unlock item.
+        /// These include shop item unlocks, warehouse access, region unlocks, etc.
+        /// </summary>
+        private static bool IsLevelUpRewardItem(string itemName)
+        {
+            return Data_Items.HasTag(itemName, "Level Up Reward");
+        }
+
         #endregion
 
         #region Item Handlers
@@ -224,6 +237,16 @@ namespace Narcopelago
             string region = itemName.Replace("Cartel Influence, ", "").Trim();
             MelonLogger.Msg($"[Items] Reducing cartel influence in: {region}");
             NarcopelagoCartelInfluence.OnInfluenceItemReceived(region);
+        }
+
+        /// <summary>
+        /// Handle receiving a level up reward unlock item.
+        /// This includes shop item unlocks, warehouse access, region unlocks, etc.
+        /// </summary>
+        private static void HandleLevelUpReward(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing level up reward: {itemName}");
+            NarcopelagoLevels.OnUnlockItemReceived(itemName);
         }
 
         #endregion

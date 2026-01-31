@@ -63,6 +63,9 @@ namespace Narcopelago
                 
                 // Process any queued cartel influence changes on the main thread
                 NarcopelagoCartelInfluence.ProcessMainThreadQueue();
+                
+                // Process any queued level up checks on the main thread
+                NarcopelagoLevels.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -75,15 +78,17 @@ namespace Narcopelago
                 NarcopelagoDealers.SetInGameScene(isGameScene);
                 NarcopelagoSuppliers.SetInGameScene(isGameScene);
                 NarcopelagoCartelInfluence.SetInGameScene(isGameScene);
+                NarcopelagoLevels.SetInGameScene(isGameScene);
             
                 // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
                 if (isGameScene && NarcopelagoItems.IsInitialized)
                 {
-                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer/supplier/cartel from Archipelago");
+                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer/supplier/cartel/levels from Archipelago");
                     NarcopelagoCustomers.SyncFromSession();
                     NarcopelagoDealers.SyncFromSession();
                     NarcopelagoSuppliers.SyncFromSession();
                     NarcopelagoCartelInfluence.SyncFromSession();
+                    NarcopelagoLevels.SyncFromSession();
                 }
             }
 
