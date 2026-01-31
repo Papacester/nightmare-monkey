@@ -118,6 +118,10 @@ namespace Narcopelago
             {
                 HandlePropertyItem(itemName);
             }
+            else if (NarcopelagoFillers.IsFillerItem(itemName))
+            {
+                HandleFillerItem(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -295,6 +299,16 @@ namespace Narcopelago
         {
             MelonLogger.Msg($"[Items] Processing property item: {itemName}");
             NarcopelagoRealtor.OnPropertyItemReceived(itemName);
+        }
+
+        /// <summary>
+        /// Handle receiving a filler item.
+        /// Creates a dead drop with the item for the player to collect.
+        /// </summary>
+        private static void HandleFillerItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing filler item: {itemName}");
+            NarcopelagoFillers.OnFillerItemReceived(itemName);
         }
 
         #endregion

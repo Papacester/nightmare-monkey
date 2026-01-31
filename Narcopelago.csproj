@@ -512,6 +512,7 @@
 		<Compile Include="NarcopelagoCustomers.cs" />
 		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
+		<Compile Include="NarcopelagoFillers.cs" />
 		<Compile Include="NarcopelagoGoal.cs" />
 		<Compile Include="NarcopelagoItems.cs" />
 		<Compile Include="NarcopelagoLevels.cs" />

@@ -87,6 +87,9 @@ namespace Narcopelago
                 
                 // Process any queued property/business unlocks on the main thread
                 NarcopelagoRealtor.ProcessMainThreadQueue();
+                
+                // Process any queued filler item dead drops on the main thread
+                NarcopelagoFillers.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -106,6 +109,7 @@ namespace Narcopelago
                 NarcopelagoCashForTrash.SetInGameScene(isGameScene);
                 NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
                 NarcopelagoRealtor.SetInGameScene(isGameScene);
+                NarcopelagoFillers.SetInGameScene(isGameScene);
             
                 // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
                 if (isGameScene && NarcopelagoItems.IsInitialized)
