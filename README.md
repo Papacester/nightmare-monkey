@@ -13,6 +13,11 @@ Level up rewards are suppressed when randomize_level_up_rewards is true<br>
 Level up rewards are added to the item pool when randomize_level_up_rewards is true<br>
 Whenever you'd nomrally get unlocks for leveling up, you get a check regardless of the option<br>
 Deathlink is sent when a player dies or when they arrested. Recieved deathlink causes player to get arrested<br>
+Property and busniesses give checks when purchased<br>
+Randomized properties or businesses will not be unlocked when purchased if randomization on, properties and/or businesses will be added to the item pool<br>
+Recipe checks are sent when recipes are learned<br>
+Cash for trash are sent every 10 trash burned<br>
+Filler items will be sent as deaddrop quests<br>
 <br>
 <br>
 To install:<br>
