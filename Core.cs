@@ -66,6 +66,9 @@ namespace Narcopelago
                 
                 // Process any queued level up checks on the main thread
                 NarcopelagoLevels.ProcessMainThreadQueue();
+                
+                // Process any queued DeathLink deaths on the main thread
+                NarcopelagoDeathLink.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
