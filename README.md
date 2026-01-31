@@ -9,6 +9,9 @@ Suppliers will not be unlockable if suppliers are randomized and only unlocked t
 Suppliers give checks for unlocking them when suppliers are not randomized<br>
 Every Action that would cause cartel influence in a region to drop is a check (x7 per region)<br>
 Unable to reduce cartel influence naturally and cartel influence items added to pool when randomize_cartel_influence is true<br>
+Level up rewards are suppressed when randomize_level_up_rewards is true<br>
+Level up rewards are added to the item pool when randomize_level_up_rewards is true<br>
+Whenever you'd nomrally get unlocks for leveling up, you get a check regardless of the option<br>
 <br>
 <br>
 To install:<br>
