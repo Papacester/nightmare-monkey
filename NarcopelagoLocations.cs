@@ -83,6 +83,9 @@ namespace Narcopelago
                 }
             }
 
+            // Notify goal system about this location check
+            NarcopelagoGoal.OnLocationChecked((int)locationId);
+
             // Trigger send if not already sending
             SendPendingLocationsAsync();
         }
@@ -112,6 +115,12 @@ namespace Narcopelago
                         _pendingLocationChecks.Add(id);
                     }
                 }
+            }
+
+            // Notify goal system about each location check
+            foreach (var id in locationIds)
+            {
+                NarcopelagoGoal.OnLocationChecked((int)id);
             }
 
             // Trigger send if not already sending

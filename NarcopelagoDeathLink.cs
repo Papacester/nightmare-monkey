@@ -232,6 +232,9 @@ namespace Narcopelago
                 session.Socket.SendPacket(bouncePacket);
                 
                 MelonLogger.Msg($"[DeathLink] Bounce packet sent with timestamp {timestamp}");
+                
+                // Notify APContacts about the sent deathlink
+                NarcopelagoAPContacts.OnDeathLinkSent(playerName, cause);
             }
             catch (Exception ex)
             {
@@ -271,6 +274,9 @@ namespace Narcopelago
                 
                 // Queue the death to be processed on the main thread
                 _pendingDeaths.Enqueue((source, cause));
+                
+                // Notify APContacts about the received deathlink
+                NarcopelagoAPContacts.OnDeathLinkReceived(source, cause);
             }
             catch (Exception ex)
             {

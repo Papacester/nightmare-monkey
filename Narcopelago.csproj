@@ -505,10 +505,12 @@
 		<Compile Include="Core.cs" />
 		<Compile Include="Data_Items.cs" />
 		<Compile Include="Data_Locations.cs" />
+		<Compile Include="NarcopelagoAPContacts.cs" />
 		<Compile Include="NarcopelagoCartelInfluence.cs" />
 		<Compile Include="NarcopelagoCustomers.cs" />
 		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
+		<Compile Include="NarcopelagoGoal.cs" />
 		<Compile Include="NarcopelagoItems.cs" />
 		<Compile Include="NarcopelagoLevels.cs" />
 		<Compile Include="NarcopelagoLocations.cs" />

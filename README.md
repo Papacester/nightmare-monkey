@@ -12,12 +12,13 @@ Unable to reduce cartel influence naturally and cartel influence items added to 
 Level up rewards are suppressed when randomize_level_up_rewards is true<br>
 Level up rewards are added to the item pool when randomize_level_up_rewards is true<br>
 Whenever you'd nomrally get unlocks for leveling up, you get a check regardless of the option<br>
+Deathlink is sent when a player dies or when they arrested. Recieved deathlink causes player to get arrested<br>
 <br>
 <br>
 To install:<br>
 <br>
 Install Archipelago https://archipelago.gg/tutorial/Archipelago/setup_en<br>
-Install APWorld. [https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.4](https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.4)<br>
+Install APWorld. [https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.6](https://github.com/MacH8s/Narcopelago/releases/tag/v3.0.6)<br>
 Install Melonloader found here https://melonwiki.xyz/#/<br>
 Launch game and confirm MelonLoader console opens<br>
 Unzip Narcopelgo zip into steamapps\common\Schedule I\mods . This folder can also be found by right clicking on the game on steam->Manage->Browse local files. In there should be the mods folder.<br>
