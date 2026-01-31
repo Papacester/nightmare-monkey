@@ -1,0 +1,537 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<RootNamespace>Narcopelago</RootNamespace>
+		<LangVersion>latest</LangVersion>
+		<IsPackable>false</IsPackable>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<AssemblyName>Narcopelago</AssemblyName>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="Accessibility">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Accessibility.dll</HintPath>
+		</Reference>
+		<Reference Include="AeLa.EasyFeedback.Demo">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AeLa.EasyFeedback.Demo.dll</HintPath>
+		</Reference>
+		<Reference Include="AeLa.EasyFeedback">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AeLa.EasyFeedback.dll</HintPath>
+		</Reference>
+		<Reference Include="AeLa.EasyFeedback.InputSystemSupport">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AeLa.EasyFeedback.InputSystemSupport.dll</HintPath>
+		</Reference>
+		<Reference Include="AmplifyImpostors">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AmplifyImpostors.dll</HintPath>
+		</Reference>
+		<Reference Include="AmplifyImpostors.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AmplifyImpostors.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp-firstpass">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppInterop.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="AstarPathfindingProject">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\AstarPathfindingProject.dll</HintPath>
+		</Reference>
+		<Reference Include="Autodesk.Fbx">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Autodesk.Fbx.dll</HintPath>
+		</Reference>
+		<Reference Include="Boxophobic.Utils.Scripts">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Boxophobic.Utils.Scripts.dll</HintPath>
+		</Reference>
+		<Reference Include="Cinemachine">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Cinemachine.dll</HintPath>
+		</Reference>
+		<Reference Include="com.rlabrecque.steamworks.net">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+		</Reference>
+		<Reference Include="CorgiGodRays">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\CorgiGodRays.dll</HintPath>
+		</Reference>
+		<Reference Include="EasyButtons">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\EasyButtons.dll</HintPath>
+		</Reference>
+		<Reference Include="Edgegap">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Edgegap.dll</HintPath>
+		</Reference>
+		<Reference Include="FbxBuildTestAssets">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\FbxBuildTestAssets.dll</HintPath>
+		</Reference>
+		<Reference Include="FishNet.CodeAnalysis">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\FishNet.CodeAnalysis.dll</HintPath>
+		</Reference>
+		<Reference Include="FishNet.Demos">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\FishNet.Demos.dll</HintPath>
+		</Reference>
+		<Reference Include="FishNet.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\FishNet.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppFishNet.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2CppFishNet.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="GameKit.Dependencies">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\GameKit.Dependencies.dll</HintPath>
+		</Reference>
+		<Reference Include="GameKit.Utilities">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\GameKit.Utilities.dll</HintPath>
+		</Reference>
+		<Reference Include="HBAO.Demo.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HBAO.Demo.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="HBAO.Demo.Universal.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HBAO.Demo.Universal.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="HBAO.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HBAO.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="HBAO.Universal.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HBAO.Universal.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="HSVPicker">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\HSVPicker.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2CppSystem">
+		  <HintPath>..\..\..\..\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+		</Reference>
+		<Reference Include="Il2Cppmscorlib">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+		</Reference>
+		<Reference Include="LokoSolo.PinchableScrollRect">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\LokoSolo.PinchableScrollRect.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Data.Sqlite">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Mono.Data.Sqlite.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.Posix">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Mono.Posix.dll</HintPath>
+		</Reference>
+		<Reference Include="Mono.WebBrowser">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Mono.WebBrowser.dll</HintPath>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="Novell.Directory.Ldap">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Novell.Directory.Ldap.dll</HintPath>
+		</Reference>
+		<Reference Include="Ookii.Dialogs">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Ookii.Dialogs.dll</HintPath>
+		</Reference>
+		<Reference Include="Pathfinding.ClipperLib">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Pathfinding.ClipperLib.dll</HintPath>
+		</Reference>
+		<Reference Include="Pathfinding.Ionic.Zip.Reduced">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
+		</Reference>
+		<Reference Include="Pathfinding.Poly2Tri">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Pathfinding.Poly2Tri.dll</HintPath>
+		</Reference>
+		<Reference Include="RadiantGI">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\RadiantGI.dll</HintPath>
+		</Reference>
+		<Reference Include="RootMotion">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\RootMotion.dll</HintPath>
+		</Reference>
+		<Reference Include="RuntimePreviewGenerator.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\RuntimePreviewGenerator.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="sc.stylizedgrass.runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\sc.stylizedgrass.runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="sc.stylizedwater2.runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\sc.stylizedwater2.runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="StylizedWaterForURP">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\StylizedWaterForURP.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.AI.Navigation">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.AI.Navigation.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Burst">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Burst.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Burst.Unsafe">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Burst.Unsafe.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Collections">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Collections.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Collections.LowLevel.ILSupport">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Formats.Fbx.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Formats.Fbx.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.InputSystem">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.InputSystem.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.InputSystem.ForUI">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.InputSystem.ForUI.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Mathematics">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Mathematics.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.MemoryProfiler">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.MemoryProfiler.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Postprocessing.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Profiling.Core">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Profiling.Core.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.ProGrids">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.ProGrids.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.Core.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.Universal.Config.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.Universal.Config.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.Universal.Runtime">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.Universal.Shaders">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Analytics">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Analytics.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.CloudDiagnostics">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.CloudDiagnostics.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Analytics">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Analytics.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Components">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Components.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Configuration">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Configuration.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Device">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Device.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Environments">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Environments.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Environments.Internal">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Environments.Internal.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Internal">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Internal.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Networking">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Networking.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Registration">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Registration.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Scheduler">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Scheduler.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Telemetry">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Telemetry.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Services.Core.Threading">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Services.Core.Threading.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TerrainTools">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.TerrainTools.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Timeline">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\Unity.Timeline.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AccessibilityModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AIModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AndroidJNIModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AndroidJNIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AnimationModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ARModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ARModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AudioModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ClothModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ClusterInputModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ClusterRendererModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ContentLoadModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ContentLoadModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CrashReportingModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.DirectorModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.DSPGraphModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.GameCenterModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.GIModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.GIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.GridModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.GridModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.HotReloadModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ImageConversionModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.IMGUIModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.InputLegacyModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.InputModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.JSONSerializeModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.LocalizationModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.NVIDIAModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.NVIDIAModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ParticleSystemModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PerformanceReportingModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.Physics2DModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PhysicsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ProfilerModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PropertiesModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.PropertiesModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ScreenCaptureModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SharedInternalsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SpriteMaskModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SpriteShapeModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.StreamingModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SubstanceModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SubsystemsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.SubsystemsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TerrainModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TerrainPhysicsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextCoreFontEngineModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextCoreTextEngineModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextRenderingModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TilemapModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TLSModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UI">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIElementsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UmbraModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityAnalyticsCommonModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityAnalyticsModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityConnectModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityCurlModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityCurlModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityTestProtocolModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestAudioModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestTextureModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestWWWModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.VehiclesModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.VFXModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.VFXModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.VideoModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.VirtualTexturingModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.VirtualTexturingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.VRModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.WindModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.WindModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.XRModule">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.XRModule.dll</HintPath>
+		</Reference>
+		<Reference Include="VisualDesignCafe.Nature">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\VisualDesignCafe.Nature.dll</HintPath>
+		</Reference>
+		<Reference Include="VisualDesignCafe.Packages">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\VisualDesignCafe.Packages.dll</HintPath>
+		</Reference>
+		<Reference Include="VisualDesignCafe.ShaderX">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\VisualDesignCafe.ShaderX.dll</HintPath>
+		</Reference>
+		<Reference Include="MelonLoader">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\MelonLoader.dll</HintPath>
+		</Reference>
+		<Reference Include="0Harmony">
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\net6\0Harmony.dll</HintPath>
+		</Reference>
+
+	</ItemGroup>
+
+	<PropertyGroup>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="Core.cs" />
+		<Compile Include="Data_Items.cs" />
+		<Compile Include="Data_Locations.cs" />
+		<Compile Include="NarcopelagoAPContacts.cs" />
+		<Compile Include="NarcopelagoBundles.cs" />
+		<Compile Include="NarcopelagoCartelInfluence.cs" />
+		<Compile Include="NarcopelagoCashForTrash.cs" />
+		<Compile Include="NarcopelagoCustomers.cs" />
+		<Compile Include="NarcopelagoDealers.cs" />
+		<Compile Include="NarcopelagoDeathLink.cs" />
+		<Compile Include="NarcopelagoFillers.cs" />
+		<Compile Include="NarcopelagoGoal.cs" />
+		<Compile Include="NarcopelagoItems.cs" />
+		<Compile Include="NarcopelagoLevels.cs" />
+		<Compile Include="NarcopelagoLocations.cs" />
+		<Compile Include="NarcopelagoMainMenu.cs" />
+		<Compile Include="NarcopelagoOptions.cs" />
+		<Compile Include="NarcopelagoQuests.cs" />
+		<Compile Include="NarcopelagoRealtor.cs" />
+		<Compile Include="NarcopelagoRecipeChecks.cs" />
+		<Compile Include="NarcopelagoSuppliers.cs" />
+		<Compile Include="NarcopelagoUI.cs" />
+		<Compile Include="StringHelper.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Archipelago.MultiClient.Net" Version="6.7.0" />
+	</ItemGroup>
+	
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;F:\Steam games\steamapps\common\Schedule I\Mods&quot;" />
+	</Target>
+</Project>
