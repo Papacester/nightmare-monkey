@@ -106,6 +106,14 @@ namespace Narcopelago
             {
                 HandleLevelUpReward(itemName);
             }
+            else if (NarcopelagoBundles.IsCashBundleItem(itemName))
+            {
+                HandleCashBundle(itemName);
+            }
+            else if (NarcopelagoBundles.IsXPBundleItem(itemName))
+            {
+                HandleXPBundle(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -247,6 +255,24 @@ namespace Narcopelago
         {
             MelonLogger.Msg($"[Items] Processing level up reward: {itemName}");
             NarcopelagoLevels.OnUnlockItemReceived(itemName);
+        }
+
+        /// <summary>
+        /// Handle receiving a Cash Bundle item.
+        /// </summary>
+        private static void HandleCashBundle(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing cash bundle: {itemName}");
+            NarcopelagoBundles.OnCashBundleReceived();
+        }
+
+        /// <summary>
+        /// Handle receiving an XP Bundle item.
+        /// </summary>
+        private static void HandleXPBundle(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing XP bundle: {itemName}");
+            NarcopelagoBundles.OnXPBundleReceived();
         }
 
         #endregion

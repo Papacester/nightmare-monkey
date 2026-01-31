@@ -89,6 +89,40 @@ namespace Narcopelago
         public static bool Deathlink { get; private set; } = false;
 
         // ============================================================
+        // Bundle Options
+        // ============================================================
+
+        /// <summary>
+        /// Number of XP bundles in the item pool
+        /// </summary>
+        public static int Number_of_xp_bundles { get; private set; } = 0;
+
+        /// <summary>
+        /// Minimum amount of XP per bundle
+        /// </summary>
+        public static int Amount_of_xp_per_bundle_min { get; private set; } = 0;
+
+        /// <summary>
+        /// Maximum amount of XP per bundle
+        /// </summary>
+        public static int Amount_of_xp_per_bundle_max { get; private set; } = 0;
+
+        /// <summary>
+        /// Number of cash bundles in the item pool
+        /// </summary>
+        public static int Number_of_cash_bundles { get; private set; } = 0;
+
+        /// <summary>
+        /// Minimum amount of cash per bundle
+        /// </summary>
+        public static int Amount_of_cash_per_bundle_min { get; private set; } = 0;
+
+        /// <summary>
+        /// Maximum amount of cash per bundle
+        /// </summary>
+        public static int Amount_of_cash_per_bundle_max { get; private set; } = 0;
+
+        // ============================================================
         // Methods
         // ============================================================
 
@@ -132,6 +166,14 @@ namespace Narcopelago
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Deathlink = GetBool(slotData, "death_link", false);
 
+                // Bundle options
+                Number_of_xp_bundles = GetInt(slotData, "number_of_xp_bundles", 0);
+                Amount_of_xp_per_bundle_min = GetInt(slotData, "amount_of_xp_per_bundle_min", 0);
+                Amount_of_xp_per_bundle_max = GetInt(slotData, "amount_of_xp_per_bundle_max", 0);
+                Number_of_cash_bundles = GetInt(slotData, "number_of_cash_bundles", 0);
+                Amount_of_cash_per_bundle_min = GetInt(slotData, "amount_of_cash_per_bundle_min", 0);
+                Amount_of_cash_per_bundle_max = GetInt(slotData, "amount_of_cash_per_bundle_max", 0);
+
                 IsLoaded = true;
                 LogOptions();
             }
@@ -173,6 +215,14 @@ namespace Narcopelago
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Deathlink = GetBool(slotData, "death_link", false);
 
+                // Bundle options
+                Number_of_xp_bundles = GetInt(slotData, "number_of_xp_bundles", 0);
+                Amount_of_xp_per_bundle_min = GetInt(slotData, "amount_of_xp_per_bundle_min", 0);
+                Amount_of_xp_per_bundle_max = GetInt(slotData, "amount_of_xp_per_bundle_max", 0);
+                Number_of_cash_bundles = GetInt(slotData, "number_of_cash_bundles", 0);
+                Amount_of_cash_per_bundle_min = GetInt(slotData, "amount_of_cash_per_bundle_min", 0);
+                Amount_of_cash_per_bundle_max = GetInt(slotData, "amount_of_cash_per_bundle_max", 0);
+
                 IsLoaded = true;
                 LogOptions();
             }
@@ -200,6 +250,14 @@ namespace Narcopelago
             Randomize_level_unlocks = false;
             Randomize_suppliers = false;
             Deathlink = false;
+
+            // Bundle options
+            Number_of_xp_bundles = 0;
+            Amount_of_xp_per_bundle_min = 0;
+            Amount_of_xp_per_bundle_max = 0;
+            Number_of_cash_bundles = 0;
+            Amount_of_cash_per_bundle_min = 0;
+            Amount_of_cash_per_bundle_max = 0;
         }
 
         /// <summary>
@@ -220,6 +278,12 @@ namespace Narcopelago
             MelonLogger.Msg($"  Randomize_level_unlocks: {Randomize_level_unlocks}");
             MelonLogger.Msg($"  Randomize_suppliers: {Randomize_suppliers}");
             MelonLogger.Msg($"  DeathLink: {Deathlink}");
+            MelonLogger.Msg($"  Number_of_xp_bundles: {Number_of_xp_bundles}");
+            MelonLogger.Msg($"  Amount_of_xp_per_bundle_min: {Amount_of_xp_per_bundle_min}");
+            MelonLogger.Msg($"  Amount_of_xp_per_bundle_max: {Amount_of_xp_per_bundle_max}");
+            MelonLogger.Msg($"  Number_of_cash_bundles: {Number_of_cash_bundles}");
+            MelonLogger.Msg($"  Amount_of_cash_per_bundle_min: {Amount_of_cash_per_bundle_min}");
+            MelonLogger.Msg($"  Amount_of_cash_per_bundle_max: {Amount_of_cash_per_bundle_max}");
         }
 
         /// <summary>

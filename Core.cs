@@ -75,6 +75,9 @@ namespace Narcopelago
                 
                 // Process any queued Archipelago phone messages on the main thread
                 NarcopelagoAPContacts.ProcessMainThreadQueue();
+                
+                // Process any queued bundle rewards (cash/XP) on the main thread
+                NarcopelagoBundles.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -90,6 +93,7 @@ namespace Narcopelago
                 NarcopelagoLevels.SetInGameScene(isGameScene);
                 NarcopelagoGoal.SetInGameScene(isGameScene);
                 NarcopelagoAPContacts.SetInGameScene(isGameScene);
+                NarcopelagoBundles.SetInGameScene(isGameScene);
             
                 // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
                 if (isGameScene && NarcopelagoItems.IsInitialized)
@@ -101,6 +105,7 @@ namespace Narcopelago
                     NarcopelagoCartelInfluence.SyncFromSession();
                     NarcopelagoLevels.SyncFromSession();
                     NarcopelagoGoal.SyncFromSession();
+                    NarcopelagoBundles.SyncFromSession();
                 }
             }
 
