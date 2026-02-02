@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.2", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.3", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
