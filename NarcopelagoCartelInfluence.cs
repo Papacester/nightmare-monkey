@@ -525,29 +525,30 @@ namespace Narcopelago
     }
 
     /// <summary>
-    /// Harmony patch for SpraySurfaceInteraction.Reward
+    /// Harmony patch for WorldSpraySurface.OnEditingFinished
     /// Called when spray painting is completed on a surface.
+    /// This is a public virtual method that triggers when the player finishes painting.
     /// </summary>
-    [HarmonyPatch(typeof(SpraySurfaceInteraction), "Reward")]
-    public class SpraySurfaceInteraction_Reward_Patch
+    [HarmonyPatch(typeof(WorldSpraySurface), "OnEditingFinished")]
+    public class WorldSpraySurface_OnEditingFinished_Patch
     {
         static bool Prepare()
         {
-            MelonLogger.Msg("[PATCH] SpraySurfaceInteraction.Reward patch is being prepared");
+            MelonLogger.Msg("[PATCH] WorldSpraySurface.OnEditingFinished patch is being prepared");
             return true;
         }
 
-        static void Postfix(SpraySurfaceInteraction __instance)
+        static void Postfix(WorldSpraySurface __instance)
         {
             try
             {
-                string region = __instance.SpraySurface.Region.ToString();
+                string region = __instance.Region.ToString();
                 MelonLogger.Msg($"[PATCH] Spray painting completed in '{region}'");
                 NarcopelagoCartelInfluence.OnAntiCartelActivityCompleted(region, "SprayPainting");
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[PATCH] Error in SpraySurfaceInteraction.Reward Postfix: {ex.Message}");
+                MelonLogger.Error($"[PATCH] Error in WorldSpraySurface.OnEditingFinished Postfix: {ex.Message}");
             }
         }
     }
