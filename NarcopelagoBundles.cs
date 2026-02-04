@@ -175,6 +175,11 @@ namespace Narcopelago
             if (!_inGameScene)
                 return;
 
+            // Don't process if game managers aren't available yet
+            // This happens right after entering the scene before the game is fully initialized
+            if (!NetworkSingleton<MoneyManager>.InstanceExists || !NetworkSingleton<LevelManager>.InstanceExists)
+                return;
+
             // Process pending cash
             while (_pendingCashAmounts.TryDequeue(out int cashAmount))
             {

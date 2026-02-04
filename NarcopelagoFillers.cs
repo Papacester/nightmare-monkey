@@ -86,6 +86,11 @@ namespace Narcopelago
             if (!_inGameScene)
                 return;
 
+            // Don't process if QuestManager isn't available yet
+            // This happens right after entering the scene before the game is fully initialized
+            if (!NetworkSingleton<QuestManager>.InstanceExists || NetworkSingleton<QuestManager>.Instance == null)
+                return;
+
             while (_pendingFillers.TryDequeue(out var filler))
             {
                 try

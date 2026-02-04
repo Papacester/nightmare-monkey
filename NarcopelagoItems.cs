@@ -3,6 +3,7 @@ using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.Models;
 using MelonLoader;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,6 +19,37 @@ namespace Narcopelago
         /// Indicates whether we have subscribed to item events.
         /// </summary>
         public static bool IsInitialized { get; private set; } = false;
+
+        /// <summary>
+        /// The tutorial location that indicates a new game vs returning player.
+        /// If this location is already checked when loading in, we skip consumable items
+        /// (Cash, XP, Fillers) since they were already granted in a previous session.
+        /// </summary>
+        public const string TUTORIAL_LOCATION = "Welcome to Hyland Point|Open your phone and read your messages";
+
+        /// <summary>
+        /// If true, skip all consumable items (Cash, XP, Fillers) permanently.
+        /// Set to true if the tutorial location was already completed when we initialized.
+        /// This means we're a returning player and consumables were already granted.
+        /// </summary>
+        private static bool _skipConsumables = false;
+
+        /// <summary>
+        /// If true, hold consumable items until the tutorial is completed.
+        /// Set to true if the tutorial location was NOT completed when we initialized.
+        /// This means we're starting a new game and need to wait for the game to be ready.
+        /// </summary>
+        private static bool _holdConsumablesUntilTutorial = false;
+
+        /// <summary>
+        /// Queue of held consumable items waiting for tutorial completion.
+        /// </summary>
+        private static ConcurrentQueue<(string type, string itemName)> _heldConsumables = new ConcurrentQueue<(string, string)>();
+
+        /// <summary>
+        /// Tracks if the tutorial has been completed this session (consumables released).
+        /// </summary>
+        private static bool _tutorialCompletedThisSession = false;
 
         /// <summary>
         /// Called after successful connection to set up item receiving.
@@ -40,6 +72,24 @@ namespace Narcopelago
 
             try
             {
+                // Check if the tutorial location has already been completed
+                bool tutorialAlreadyCompleted = IsTutorialLocationChecked();
+                
+                if (tutorialAlreadyCompleted)
+                {
+                    // Returning player - skip all consumables since they were already granted
+                    _skipConsumables = true;
+                    _holdConsumablesUntilTutorial = false;
+                    MelonLogger.Msg("[Items] Tutorial location already completed - skipping consumable items (Cash, XP, Fillers)");
+                }
+                else
+                {
+                    // New game - hold consumables until tutorial is completed
+                    _skipConsumables = false;
+                    _holdConsumablesUntilTutorial = true;
+                    MelonLogger.Msg("[Items] New game detected - consumable items will be held until tutorial completion");
+                }
+
                 // Subscribe to item received events
                 // The Archipelago client handles tracking which items are new
                 session.Items.ItemReceived += OnItemReceived;
@@ -51,6 +101,26 @@ namespace Narcopelago
             {
                 MelonLogger.Error($"[Items] Failed to initialize: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Checks if the tutorial location has been completed.
+        /// </summary>
+        private static bool IsTutorialLocationChecked()
+        {
+            if (!NarcopelagoLocations.IsAvailable)
+            {
+                return false;
+            }
+
+            long locationId = NarcopelagoLocations.GetLocationId(TUTORIAL_LOCATION);
+            if (locationId <= 0)
+            {
+                MelonLogger.Warning($"[Items] Could not find tutorial location ID for: {TUTORIAL_LOCATION}");
+                return false;
+            }
+
+            return NarcopelagoLocations.IsLocationChecked(locationId);
         }
 
         /// <summary>
@@ -108,10 +178,32 @@ namespace Narcopelago
             }
             else if (NarcopelagoBundles.IsCashBundleItem(itemName))
             {
+                if (_skipConsumables)
+                {
+                    MelonLogger.Msg($"[Items] Skipping cash bundle - returning player");
+                    return;
+                }
+                if (_holdConsumablesUntilTutorial && !_tutorialCompletedThisSession)
+                {
+                    MelonLogger.Msg($"[Items] Holding cash bundle until tutorial completion");
+                    _heldConsumables.Enqueue(("CashBundle", itemName));
+                    return;
+                }
                 HandleCashBundle(itemName);
             }
             else if (NarcopelagoBundles.IsXPBundleItem(itemName))
             {
+                if (_skipConsumables)
+                {
+                    MelonLogger.Msg($"[Items] Skipping XP bundle - returning player");
+                    return;
+                }
+                if (_holdConsumablesUntilTutorial && !_tutorialCompletedThisSession)
+                {
+                    MelonLogger.Msg($"[Items] Holding XP bundle until tutorial completion");
+                    _heldConsumables.Enqueue(("XPBundle", itemName));
+                    return;
+                }
                 HandleXPBundle(itemName);
             }
             else if (IsPropertyItem(itemName))
@@ -120,6 +212,17 @@ namespace Narcopelago
             }
             else if (NarcopelagoFillers.IsFillerItem(itemName))
             {
+                if (_skipConsumables)
+                {
+                    MelonLogger.Msg($"[Items] Skipping filler item '{itemName}' - returning player");
+                    return;
+                }
+                if (_holdConsumablesUntilTutorial && !_tutorialCompletedThisSession)
+                {
+                    MelonLogger.Msg($"[Items] Holding filler item '{itemName}' until tutorial completion");
+                    _heldConsumables.Enqueue(("Filler", itemName));
+                    return;
+                }
                 HandleFillerItem(itemName);
             }
             // Log other types but don't process them yet
@@ -131,6 +234,58 @@ namespace Narcopelago
             {
                 MelonLogger.Msg($"[Items] Other item (not implemented): {itemName}");
             }
+        }
+
+        /// <summary>
+        /// Called when the tutorial location is completed.
+        /// Releases all held consumable items.
+        /// </summary>
+        public static void OnTutorialCompleted()
+        {
+            if (_tutorialCompletedThisSession)
+            {
+                return; // Already processed
+            }
+
+            _tutorialCompletedThisSession = true;
+            _holdConsumablesUntilTutorial = false;
+
+            int count = _heldConsumables.Count;
+            if (count == 0)
+            {
+                MelonLogger.Msg("[Items] Tutorial completed - no held consumables to release");
+                return;
+            }
+
+            MelonLogger.Msg($"[Items] Tutorial completed - releasing {count} held consumable items");
+
+            while (_heldConsumables.TryDequeue(out var held))
+            {
+                try
+                {
+                    switch (held.type)
+                    {
+                        case "CashBundle":
+                            HandleCashBundle(held.itemName);
+                            break;
+                        case "XPBundle":
+                            HandleXPBundle(held.itemName);
+                            break;
+                        case "Filler":
+                            HandleFillerItem(held.itemName);
+                            break;
+                        default:
+                            MelonLogger.Warning($"[Items] Unknown held consumable type: {held.type}");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MelonLogger.Error($"[Items] Error releasing held consumable '{held.itemName}': {ex.Message}");
+                }
+            }
+
+            MelonLogger.Msg("[Items] Finished releasing held consumables");
         }
 
         #region Item Type Checks
@@ -319,6 +474,10 @@ namespace Narcopelago
         public static void Reset()
         {
             IsInitialized = false;
+            _skipConsumables = false;
+            _holdConsumablesUntilTutorial = false;
+            _tutorialCompletedThisSession = false;
+            while (_heldConsumables.TryDequeue(out _)) { }
             MelonLogger.Msg("[Items] Reset item processor");
         }
 
