@@ -169,18 +169,17 @@ namespace Narcopelago
 
         /// <summary>
         /// Called when a property/business AP item is received.
+        /// Always queues an immediate unlock attempt.
         /// </summary>
         public static void OnPropertyItemReceived(string propertyName)
         {
             MelonLogger.Msg($"[Realtor] AP item received for: {propertyName}");
             _unlockedViaAP.Add(propertyName);
 
-            // Queue unlock if we've already purchased this property
-            if (HasPurchasedProperty(propertyName))
-            {
-                MelonLogger.Msg($"[Realtor] Property already purchased - queueing unlock");
-                _pendingUnlocks.Enqueue(propertyName);
-            }
+            // Always queue unlock immediately when receiving an AP item
+            // The AP item grants ownership directly, regardless of whether player has purchased
+            MelonLogger.Msg($"[Realtor] Queueing immediate unlock for: {propertyName}");
+            _pendingUnlocks.Enqueue(propertyName);
         }
 
         /// <summary>
