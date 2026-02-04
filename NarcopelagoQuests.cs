@@ -3,6 +3,7 @@ using Il2CppScheduleOne.Quests;
 using MelonLoader;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Narcopelago
@@ -139,8 +140,33 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Strips parenthetical content from a string.
+        /// Examples:
+        /// - "Earn $10,000 ($10,000 / $10,000)" -> "Earn $10,000"
+        /// - "Open your phone (press Tab) and read your messages" -> "Open your phone and read your messages"
+        /// </summary>
+        /// <param name="input">The input string potentially containing parentheses.</param>
+        /// <returns>The string with all parenthetical content removed and extra spaces cleaned up.</returns>
+        private static string StripParentheticalContent(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Remove all content within parentheses (including the parentheses)
+            // This regex matches ( followed by any characters (non-greedy) followed by )
+            string result = Regex.Replace(input, @"\s*\([^)]*\)", "");
+
+            // Clean up any double spaces that might result from removal
+            result = Regex.Replace(result, @"\s+", " ");
+
+            // Trim any trailing/leading whitespace
+            return result.Trim();
+        }
+
+        /// <summary>
         /// Gets the Archipelago location name for a given quest entry.
         /// Location names are formatted as "Quest Title|Entry Name" (no spaces around the pipe)
+        /// Handles quest entries with parenthetical content by stripping it before matching.
         /// </summary>
         /// <param name="questTitle">The title of the parent quest.</param>
         /// <param name="entryName">The name of the quest entry.</param>
@@ -164,8 +190,16 @@ namespace Narcopelago
                 return null;
             }
 
+            // Strip parenthetical content from quest title and entry name
+            // Game often includes progress like "($10,000 / $10,000)" or instructions like "(press Tab)"
+            // but location names in the JSON don't have these
+            string cleanedQuestTitle = StripParentheticalContent(questTitle);
+            string cleanedEntryName = StripParentheticalContent(entryName);
+
+            MelonLogger.Msg($"[Quests] Looking up: '{cleanedQuestTitle}|{cleanedEntryName}' (original entry: '{entryName}')");
+
             // Build the expected location name: "Quest Title|Entry Name"
-            string expectedLocationName = $"{questTitle}|{entryName}";
+            string expectedLocationName = $"{cleanedQuestTitle}|{cleanedEntryName}";
             
             // Try direct lookup first (case-insensitive due to dictionary comparer)
             if (_missionLocationCache.ContainsKey(expectedLocationName))
@@ -188,10 +222,11 @@ namespace Narcopelago
                 string locationEntryPart = locationName.Substring(pipeIndex + 1);
 
                 // Check if both quest title and entry name match (case-insensitive)
-                if (string.Equals(locationQuestPart, questTitle, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(locationEntryPart, entryName, StringComparison.OrdinalIgnoreCase))
+                // Compare against cleaned versions
+                if (string.Equals(locationQuestPart, cleanedQuestTitle, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(locationEntryPart, cleanedEntryName, StringComparison.OrdinalIgnoreCase))
                 {
-                return locationName; // Return the full location name for Archipelago lookup
+                    return locationName; // Return the full location name for Archipelago lookup
                 }
             }
 
