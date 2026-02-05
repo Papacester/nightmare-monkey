@@ -1067,43 +1067,43 @@
 
       "Money Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Mild" ],
+    "tags": [ "Trap" ],
     "modern_id": 650
   },
 
   "Heat Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Mean" ],
+    "tags": [ "Trap" ],
     "modern_id": 651
   },
 
   "Slippery Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Annoying" ],
+    "tags": [ "Trap" ],
     "modern_id": 652
   },
 
   "Trash Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Annoying" ],
+    "tags": [ "Trap" ],
     "modern_id": 653
   },
 
   "Pan Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Annoying" ],
+    "tags": [ "Trap" ],
     "modern_id": 654
   },
 
   "TimeScale Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Mild" ],
+    "tags": [ "Trap" ],
     "modern_id": 655
   },
 
   "Sleep Trap": {
     "classification": [ "TRAP" ],
-    "tags": [ "Mean" ],
+    "tags": [ "Trap" ],
     "modern_id": 656
   },
     
@@ -1144,3 +1144,4 @@
     }
 
 }
+
