@@ -122,6 +122,10 @@ namespace Narcopelago
             {
                 HandleFillerItem(itemName);
             }
+            else if (NarcopelagoTraps.IsTrapItem(itemName))
+            {
+                HandleTrapItem(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -344,3 +348,4 @@ namespace Narcopelago
         }
     }
 }
+
