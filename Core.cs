@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.7", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.8", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -90,6 +90,9 @@ namespace Narcopelago
                 
                 // Process any queued filler item dead drops on the main thread
                 NarcopelagoFillers.ProcessMainThreadQueue();
+                
+                // Check for Archipelago disconnection and handle save + exit
+                NarcopelagoDisconnect.ProcessMainThreadQueue();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -110,6 +113,7 @@ namespace Narcopelago
                 NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
                 NarcopelagoRealtor.SetInGameScene(isGameScene);
                 NarcopelagoFillers.SetInGameScene(isGameScene);
+                NarcopelagoDisconnect.SetInGameScene(isGameScene);
             
                 // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
                 if (isGameScene && NarcopelagoItems.IsInitialized)
