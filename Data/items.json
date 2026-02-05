@@ -1064,6 +1064,49 @@
         "tags": ["Amazing Filler"],
         "modern_id": 224
     },
+
+      "Money Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Mild" ],
+    "modern_id": 650
+  },
+
+  "Heat Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Mean" ],
+    "modern_id": 651
+  },
+
+  "Slippery Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Annoying" ],
+    "modern_id": 652
+  },
+
+  "Trash Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Annoying" ],
+    "modern_id": 653
+  },
+
+  "Pan Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Annoying" ],
+    "modern_id": 654
+  },
+
+  "TimeScale Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Mild" ],
+    "modern_id": 655
+  },
+
+  "Sleep Trap": {
+    "classification": [ "TRAP" ],
+    "tags": [ "Mean" ],
+    "modern_id": 656
+  },
+    
     "Cartel Influence, Westville": {
         "classification": ["PROGRESSION_SKIP_BALANCING"],
         "tags": ["Cartel Influence", "Westville"],
@@ -1099,4 +1142,5 @@
         "tags": ["Bundle", "Cash"],
         "modern_id": 501
     }
+
 }
