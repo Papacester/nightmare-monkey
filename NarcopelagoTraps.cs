@@ -35,8 +35,47 @@ namespace Narcopelago
         private static readonly ConcurrentQueue<(TrapType trapType, string sourceItem)> _pendingTraps
             = new ConcurrentQueue<(TrapType, string)>();
 
+        /// <summary>
+        /// Tracks if we're in a game scene where traps can be applied.
+        /// </summary>
+        private static bool _inGameScene = false;
+
+        /// <summary>
+        /// Checks if an item is a trap item using Data_Items tags.
+        /// </summary>
+        public static bool IsTrapItem(string itemName)
+        {
+            return Data_Items.HasTag(itemName, "Trap");
+        }
+
+        /// <summary>
+        /// Sets whether we're in a game scene. Traps will only be processed when in-game.
+        /// </summary>
+        public static void SetInGameScene(bool inGame)
+        {
+            _inGameScene = inGame;
+            
+            if (!inGame)
+            {
+                // Clear any pending traps when leaving game scene
+                while (_pendingTraps.TryDequeue(out _)) { }
+                MelonLogger.Msg("[Traps] Left game scene - cleared pending traps");
+            }
+            else
+            {
+                MelonLogger.Msg("[Traps] Entered game scene - traps can now be processed");
+            }
+        }
+
         public static void OnTrapItemReceived(string itemName)
         {
+            // Only queue traps when in-game, ignore during loading/sync
+            if (!_inGameScene)
+            {
+                MelonLogger.Msg($"[Traps] Ignoring trap '{itemName}' - not in game scene (likely loading/sync)");
+                return;
+            }
+
             if (!TryGetTrapType(itemName, out var trapType))
             {
                 MelonLogger.Warning($"[Traps] Item '{itemName}' is not recognized as a trap");
@@ -44,6 +83,7 @@ namespace Narcopelago
             }
 
             _pendingTraps.Enqueue((trapType, itemName));
+            MelonLogger.Msg($"[Traps] Queued trap '{itemName}' for processing");
         }
 
         private static bool TryGetTrapType(string itemName, out TrapType trapType)
@@ -102,6 +142,12 @@ namespace Narcopelago
 
         public static void ProcessMainThreadQueue()
         {
+            // Only process traps when in-game
+            if (!_inGameScene)
+            {
+                return;
+            }
+
             while (_pendingTraps.TryDequeue(out var trap))
             {
                 switch (trap.trapType)
@@ -320,6 +366,16 @@ namespace Narcopelago
                 Quaternion.identity, // rotation
                 velocity             // initial velocity
             );
+        }
+
+        /// <summary>
+        /// Resets the trap system state.
+        /// </summary>
+        public static void Reset()
+        {
+            _inGameScene = false;
+            while (_pendingTraps.TryDequeue(out _)) { }
+            MelonLogger.Msg("[Traps] Reset trap system");
         }
 
         /*

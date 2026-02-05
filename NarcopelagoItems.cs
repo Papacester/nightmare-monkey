@@ -167,6 +167,10 @@ namespace Narcopelago
                 }
                 HandleFillerItem(itemName);
             }
+            else if (NarcopelagoTraps.IsTrapItem(itemName))
+            {
+                HandleTrapItem(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -360,6 +364,16 @@ namespace Narcopelago
             NarcopelagoFillers.OnFillerItemReceived(itemName);
         }
 
+        /// <summary>
+        /// Handle receiving a trap item.
+        /// Routes to NarcopelagoTraps for immediate effect application.
+        /// </summary>
+        private static void HandleTrapItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing trap item: {itemName}");
+            NarcopelagoTraps.OnTrapItemReceived(itemName);
+        }
+
         #endregion
 
         /// <summary>
@@ -395,3 +409,4 @@ namespace Narcopelago
         }
     }
 }
+

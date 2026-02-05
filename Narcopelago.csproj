@@ -526,6 +526,7 @@
 		<Compile Include="NarcopelagoRecipeChecks.cs" />
 		<Compile Include="NarcopelagoSave.cs" />
 		<Compile Include="NarcopelagoSuppliers.cs" />
+		<Compile Include="NarcopelagoTraps.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
 		<Compile Include="StringHelper.cs" />
 	</ItemGroup>

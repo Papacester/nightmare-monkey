@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.1.4", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.2.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -87,7 +87,10 @@ namespace Narcopelago
                 
                 // Process any queued filler item dead drops on the main thread
                 NarcopelagoFillers.ProcessMainThreadQueue();
-                
+            
+                // Process any queued trap effects on the main thread
+                NarcopelagoTraps.ProcessMainThreadQueue();
+            
                 // Process save system (delayed sync of claimable items)
                 NarcopelagoSave.ProcessMainThreadQueue();
                 
@@ -108,22 +111,23 @@ namespace Narcopelago
             {
                 LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
             
-                // Track if we're in a game scene
-                bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
-                NarcopelagoCustomers.SetInGameScene(isGameScene);
-                NarcopelagoDealers.SetInGameScene(isGameScene);
-                NarcopelagoSuppliers.SetInGameScene(isGameScene);
-                NarcopelagoCartelInfluence.SetInGameScene(isGameScene);
-                NarcopelagoLevels.SetInGameScene(isGameScene);
-                NarcopelagoGoal.SetInGameScene(isGameScene);
-                NarcopelagoAPContacts.SetInGameScene(isGameScene);
-                NarcopelagoCashForTrash.SetInGameScene(isGameScene);
-                NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
-                NarcopelagoRealtor.SetInGameScene(isGameScene);
-                NarcopelagoFillers.SetInGameScene(isGameScene);
-                NarcopelagoDisconnect.SetInGameScene(isGameScene);
-                NarcopelagoSave.SetInGameScene(isGameScene);
-                NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
+            // Track if we're in a game scene
+            bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
+            NarcopelagoCustomers.SetInGameScene(isGameScene);
+            NarcopelagoDealers.SetInGameScene(isGameScene);
+            NarcopelagoSuppliers.SetInGameScene(isGameScene);
+            NarcopelagoCartelInfluence.SetInGameScene(isGameScene);
+            NarcopelagoLevels.SetInGameScene(isGameScene);
+            NarcopelagoGoal.SetInGameScene(isGameScene);
+            NarcopelagoAPContacts.SetInGameScene(isGameScene);
+            NarcopelagoCashForTrash.SetInGameScene(isGameScene);
+            NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
+            NarcopelagoRealtor.SetInGameScene(isGameScene);
+            NarcopelagoFillers.SetInGameScene(isGameScene);
+            NarcopelagoTraps.SetInGameScene(isGameScene);
+            NarcopelagoDisconnect.SetInGameScene(isGameScene);
+            NarcopelagoSave.SetInGameScene(isGameScene);
+            NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
             
             // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
             if (isGameScene && NarcopelagoItems.IsInitialized)
