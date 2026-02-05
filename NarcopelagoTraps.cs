@@ -46,6 +46,11 @@ namespace Narcopelago
             _pendingTraps.Enqueue((trapType, itemName));
         }
 
+                public static bool IsTrapItem(string itemName)
+        {
+            return Data_Items.HasTag(itemName, "Trap");
+        }
+        
         private static bool TryGetTrapType(string itemName, out TrapType trapType)
         {
             if (itemName.Contains("Money"))
