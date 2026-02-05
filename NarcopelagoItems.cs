@@ -315,6 +315,12 @@ namespace Narcopelago
             NarcopelagoFillers.OnFillerItemReceived(itemName);
         }
 
+        private static void HandleTrapItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing trap item: {itemName}");
+            NarcopelagoTraps.OnTrapItemReceived(itemName);
+        }
+
         #endregion
 
         /// <summary>
@@ -348,4 +354,5 @@ namespace Narcopelago
         }
     }
 }
+
 
