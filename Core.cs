@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.0.8", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.1.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -76,9 +76,6 @@ namespace Narcopelago
                 // Process any queued Archipelago phone messages on the main thread
                 NarcopelagoAPContacts.ProcessMainThreadQueue();
                 
-                // Process any queued bundle rewards (cash/XP) on the main thread
-                NarcopelagoBundles.ProcessMainThreadQueue();
-                
                 // Process any queued cash-for-trash location checks on the main thread
                 NarcopelagoCashForTrash.ProcessMainThreadQueue();
                 
@@ -90,6 +87,9 @@ namespace Narcopelago
                 
                 // Process any queued filler item dead drops on the main thread
                 NarcopelagoFillers.ProcessMainThreadQueue();
+                
+                // Process save system (delayed sync of claimable items)
+                NarcopelagoSave.ProcessMainThreadQueue();
                 
                 // Check for Archipelago disconnection and handle save + exit
                 NarcopelagoDisconnect.ProcessMainThreadQueue();
@@ -108,28 +108,27 @@ namespace Narcopelago
                 NarcopelagoLevels.SetInGameScene(isGameScene);
                 NarcopelagoGoal.SetInGameScene(isGameScene);
                 NarcopelagoAPContacts.SetInGameScene(isGameScene);
-                NarcopelagoBundles.SetInGameScene(isGameScene);
                 NarcopelagoCashForTrash.SetInGameScene(isGameScene);
                 NarcopelagoRecipeChecks.SetInGameScene(isGameScene);
                 NarcopelagoRealtor.SetInGameScene(isGameScene);
                 NarcopelagoFillers.SetInGameScene(isGameScene);
                 NarcopelagoDisconnect.SetInGameScene(isGameScene);
+                NarcopelagoSave.SetInGameScene(isGameScene);
             
-                // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
-                if (isGameScene && NarcopelagoItems.IsInitialized)
-                {
-                    LoggerInstance.Msg("Game scene detected - syncing customer/dealer/supplier/cartel/levels from Archipelago");
-                    NarcopelagoCustomers.SyncFromSession();
-                    NarcopelagoDealers.SyncFromSession();
-                    NarcopelagoSuppliers.SyncFromSession();
-                    NarcopelagoCartelInfluence.SyncFromSession();
-                    NarcopelagoLevels.SyncFromSession();
-                    NarcopelagoGoal.SyncFromSession();
-                    NarcopelagoBundles.SyncFromSession();
-                    NarcopelagoCashForTrash.SyncFromSession();
-                    NarcopelagoRecipeChecks.SyncFromSession();
-                    NarcopelagoRealtor.SyncFromSession();
-                }
+            // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
+            if (isGameScene && NarcopelagoItems.IsInitialized)
+            {
+                LoggerInstance.Msg("Game scene detected - syncing customer/dealer/supplier/cartel/levels from Archipelago");
+                NarcopelagoCustomers.SyncFromSession();
+                NarcopelagoDealers.SyncFromSession();
+                NarcopelagoSuppliers.SyncFromSession();
+                NarcopelagoCartelInfluence.SyncFromSession();
+                NarcopelagoLevels.SyncFromSession();
+                NarcopelagoGoal.SyncFromSession();
+                NarcopelagoCashForTrash.SyncFromSession();
+                NarcopelagoRecipeChecks.SyncFromSession();
+                NarcopelagoRealtor.SyncFromSession();
+            }
             }
 
         private void LoadDataFiles()

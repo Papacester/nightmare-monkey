@@ -21,7 +21,7 @@ namespace Narcopelago
         /// <summary>
         /// The location name for the final quest step.
         /// </summary>
-        private const string FINISH_THE_JOB_LOCATION = "Finishing the Job| Wait for the bomb to detonate";
+        private const string FINISH_THE_JOB_LOCATION = "Finishing the Job|Wait for the bomb to detonate";
 
         /// <summary>
         /// Tracks if the networth goal has been reached.

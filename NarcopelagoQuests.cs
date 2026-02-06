@@ -73,13 +73,6 @@ namespace Narcopelago
                     {
                         MelonLogger.Msg($"Found location '{locationName}' with ID {locationId} for: {questTitle}, {entryName}");
                         NarcopelagoLocations.CompleteLocation(locationId);
-
-                        // Check if this is the tutorial location - if so, release held consumables
-                        if (string.Equals(locationName, NarcopelagoItems.TUTORIAL_LOCATION, StringComparison.OrdinalIgnoreCase))
-                        {
-                            MelonLogger.Msg("[Quests] Tutorial location completed - notifying Items to release held consumables");
-                            NarcopelagoItems.OnTutorialCompleted();
-                        }
                     }
                     else
                     {

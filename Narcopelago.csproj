@@ -332,13 +332,13 @@
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.ImageConversionModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.IMGUIModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.InputLegacyModule">
-			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+			<HintPath>F:\Steam games\steamapps\common\Schedule I\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.InputModule">
 			<HintPath>F:\Steam games\steamapps\common\Schedule I\Schedule I_Data\Managed\UnityEngine.InputModule.dll</HintPath>
@@ -523,6 +523,7 @@
 		<Compile Include="NarcopelagoQuests.cs" />
 		<Compile Include="NarcopelagoRealtor.cs" />
 		<Compile Include="NarcopelagoRecipeChecks.cs" />
+		<Compile Include="NarcopelagoSave.cs" />
 		<Compile Include="NarcopelagoSuppliers.cs" />
 		<Compile Include="NarcopelagoUI.cs" />
 		<Compile Include="StringHelper.cs" />

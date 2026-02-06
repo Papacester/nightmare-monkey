@@ -169,17 +169,40 @@ namespace Narcopelago
 
         /// <summary>
         /// Called when a property/business AP item is received.
-        /// Always queues an immediate unlock attempt.
+        /// Always unlocks the property immediately.
         /// </summary>
         public static void OnPropertyItemReceived(string propertyName)
         {
             MelonLogger.Msg($"[Realtor] AP item received for: {propertyName}");
             _unlockedViaAP.Add(propertyName);
 
-            // Always queue unlock immediately when receiving an AP item
-            // The AP item grants ownership directly, regardless of whether player has purchased
-            MelonLogger.Msg($"[Realtor] Queueing immediate unlock for: {propertyName}");
+            // Always unlock immediately when receiving an AP item
+            MelonLogger.Msg($"[Realtor] Queueing unlock for: {propertyName}");
             _pendingUnlocks.Enqueue(propertyName);
+        }
+
+        /// <summary>
+        /// Checks if the purchase location for a property has been completed.
+        /// </summary>
+        public static bool HasCompletedPurchaseLocation(string propertyName)
+        {
+            // First check our local tracking
+            if (_purchaseLocationChecked.Contains(propertyName))
+            {
+                return true;
+            }
+
+            // Then check Archipelago
+            string locationName = $"Realtor Purchase, {propertyName}";
+            int locationId = Data_Locations.GetLocationId(locationName);
+            
+            if (locationId <= 0)
+            {
+                // Location doesn't exist in data - no location check needed
+                return true;
+            }
+            
+            return NarcopelagoLocations.IsLocationChecked(locationId);
         }
 
         /// <summary>
@@ -233,6 +256,22 @@ namespace Narcopelago
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Public method to send location check (used by patches for already-owned properties).
+        /// </summary>
+        public static void SendPurchaseLocationCheckPublic(string propertyName)
+        {
+            SendPurchaseLocationCheck(propertyName);
+        }
+
+        /// <summary>
+        /// Public method to mark a property as purchased (used by patches for already-owned properties).
+        /// </summary>
+        public static void MarkAsPurchased(string propertyName)
+        {
+            _purchaseLocationChecked.Add(propertyName);
+        }
 
         /// <summary>
         /// Sends the location check for a property purchase.
@@ -290,7 +329,7 @@ namespace Narcopelago
                         MelonLogger.Msg($"[Realtor] Synced AP unlock for: {itemName}");
                     }
 
-                    // Try to unlock if we have the item
+                    // Always unlock when we have the AP item
                     _pendingUnlocks.Enqueue(itemName);
                 }
             }
@@ -433,6 +472,7 @@ namespace Narcopelago
     /// <summary>
     /// Harmony patch for DialogueHandler_EstateAgent.DialogueCallback
     /// Intercepts property/business purchases to send location checks and conditionally block unlocks.
+    /// Also handles the case where properties are already owned (from AP) but need location checks.
     /// </summary>
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "DialogueCallback")]
     public class DialogueHandler_EstateAgent_DialogueCallback_Patch
@@ -453,6 +493,12 @@ namespace Narcopelago
             _pendingBusiness = business;
         }
 
+        public static void ClearPending()
+        {
+            _pendingProperty = null;
+            _pendingBusiness = null;
+        }
+
         static bool Prepare()
         {
             MelonLogger.Msg("[PATCH] DialogueHandler_EstateAgent.DialogueCallback patch is being prepared");
@@ -466,6 +512,26 @@ namespace Narcopelago
                 if (choiceLabel == "CONFIRM_BUY" && _pendingProperty != null)
                 {
                     string propertyName = _pendingProperty.PropertyName;
+                    bool isAlreadyOwned = _pendingProperty.IsOwned;
+                    
+                    MelonLogger.Msg($"[PATCH] CONFIRM_BUY for '{propertyName}' (AlreadyOwned: {isAlreadyOwned})");
+
+                    if (isAlreadyOwned)
+                    {
+                        // Property already owned via AP - still charge the player and send the location check
+                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
+                            propertyName + " purchase", 
+                            0f - _pendingProperty.Price, 
+                            1f, 
+                            string.Empty);
+                        
+                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(propertyName);
+                        NarcopelagoRealtor.MarkAsPurchased(propertyName);
+                        MelonLogger.Msg($"[PATCH] Property '{propertyName}' already owned - payment processed, location check sent");
+                        _pendingProperty = null;
+                        return false; // Skip original - don't try to buy what we already own
+                    }
+
                     bool shouldUnlock = NarcopelagoRealtor.OnPropertyPurchase(propertyName, isBusiness: false);
 
                     if (!shouldUnlock)
@@ -487,6 +553,26 @@ namespace Narcopelago
                 else if (choiceLabel == "CONFIRM_BUY_BUSINESS" && _pendingBusiness != null)
                 {
                     string businessName = _pendingBusiness.PropertyName;
+                    bool isAlreadyOwned = _pendingBusiness.IsOwned;
+                    
+                    MelonLogger.Msg($"[PATCH] CONFIRM_BUY_BUSINESS for '{businessName}' (AlreadyOwned: {isAlreadyOwned})");
+
+                    if (isAlreadyOwned)
+                    {
+                        // Business already owned via AP - still charge the player and send the location check
+                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
+                            businessName + " purchase", 
+                            0f - _pendingBusiness.Price, 
+                            1f, 
+                            string.Empty);
+                        
+                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(businessName);
+                        NarcopelagoRealtor.MarkAsPurchased(businessName);
+                        MelonLogger.Msg($"[PATCH] Business '{businessName}' already owned - payment processed, location check sent");
+                        _pendingBusiness = null;
+                        return false; // Skip original - don't try to buy what we already own
+                    }
+
                     bool shouldUnlock = NarcopelagoRealtor.OnPropertyPurchase(businessName, isBusiness: true);
 
                     if (!shouldUnlock)
@@ -518,6 +604,8 @@ namespace Narcopelago
     /// <summary>
     /// Harmony patch for DialogueHandler_EstateAgent.ChoiceCallback
     /// Captures the selected property/business before purchase confirmation.
+    /// For already-owned properties (from AP), handles the purchase directly here
+    /// since the game won't show the normal CONFIRM_BUY flow.
     /// </summary>
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ChoiceCallback")]
     public class DialogueHandler_EstateAgent_ChoiceCallback_Patch
@@ -528,32 +616,77 @@ namespace Narcopelago
             return true;
         }
 
-        static void Postfix(string choiceLabel)
+        static void Postfix(DialogueHandler_EstateAgent __instance, string choiceLabel)
         {
             try
             {
                 // IMPORTANT: Check businesses FIRST since Business extends Property
-                // If we check Property.UnownedProperties first, we'll find businesses there too
+                // Search in ALL businesses (not just unowned) because AP item may have already unlocked it
                 
                 // Check if this is a business selection
-                var business = Business.UnownedBusinesses.Find(
+                var business = Business.Businesses.Find(
                     new Func<Business, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
                 
                 if (business != null)
                 {
+                    MelonLogger.Msg($"[PATCH] Selected business: {business.PropertyName} (Owned: {business.IsOwned})");
+                    
+                    // If already owned, handle the purchase directly here
+                    // The game won't show CONFIRM_BUY for owned properties
+                    if (business.IsOwned && !NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName))
+                    {
+                        // Charge the player
+                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
+                            business.PropertyName + " purchase", 
+                            0f - business.Price, 
+                            1f, 
+                            string.Empty);
+                        
+                        // Send location check
+                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(business.PropertyName);
+                        NarcopelagoRealtor.MarkAsPurchased(business.PropertyName);
+                        MelonLogger.Msg($"[PATCH] Business '{business.PropertyName}' already owned - payment processed, location check sent");
+                        
+                        // Close the dialogue since we handled it
+                        __instance.EndDialogue();
+                        return;
+                    }
+                    
                     DialogueHandler_EstateAgent_DialogueCallback_Patch.SetPendingBusiness(business);
-                    MelonLogger.Msg($"[PATCH] Selected business: {business.PropertyName}");
                     return;
                 }
 
                 // Check if this is a property selection (only if not a business)
-                var property = Property.UnownedProperties.Find(
+                // Search in ALL properties (not just unowned) because AP item may have already unlocked it
+                var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
                 
                 if (property != null)
                 {
+                    MelonLogger.Msg($"[PATCH] Selected property: {property.PropertyName} (Owned: {property.IsOwned})");
+                    
+                    // If already owned, handle the purchase directly here
+                    // The game won't show CONFIRM_BUY for owned properties
+                    if (property.IsOwned && !NarcopelagoRealtor.HasCompletedPurchaseLocation(property.PropertyName))
+                    {
+                        // Charge the player
+                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
+                            property.PropertyName + " purchase", 
+                            0f - property.Price, 
+                            1f, 
+                            string.Empty);
+                        
+                        // Send location check
+                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(property.PropertyName);
+                        NarcopelagoRealtor.MarkAsPurchased(property.PropertyName);
+                        MelonLogger.Msg($"[PATCH] Property '{property.PropertyName}' already owned - payment processed, location check sent");
+                        
+                        // Close the dialogue since we handled it
+                        __instance.EndDialogue();
+                        return;
+                    }
+                    
                     DialogueHandler_EstateAgent_DialogueCallback_Patch.SetPendingProperty(property);
-                    MelonLogger.Msg($"[PATCH] Selected property: {property.PropertyName}");
                     return;
                 }
             }
@@ -566,7 +699,9 @@ namespace Narcopelago
 
     /// <summary>
     /// Harmony patch for DialogueHandler_EstateAgent.ShouldChoiceBeShown
-    /// Hides purchase options for properties that have already been purchased but not unlocked.
+    /// Controls visibility of purchase options based on location check status and player funds.
+    /// Shows options for owned properties if their location check is not complete AND player has funds.
+    /// Hides options for properties whose location check is already complete.
     /// </summary>
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ShouldChoiceBeShown")]
     public class DialogueHandler_EstateAgent_ShouldChoiceBeShown_Patch
@@ -577,26 +712,41 @@ namespace Narcopelago
             return true;
         }
 
-        static void Postfix(string choiceLabel, ref bool __result)
+        /// <summary>
+        /// Prefix to control visibility. We need to handle:
+        /// 1. Force SHOW owned properties if location check not complete AND player has enough money
+        /// 2. Force HIDE any properties if location check IS complete
+        /// 3. Force HIDE if player doesn't have enough money
+        /// </summary>
+        static bool Prefix(string choiceLabel, ref bool __result)
         {
             try
             {
-                // If already hidden by original logic, keep it hidden
-                if (!__result)
-                    return;
-
                 // Check if this is a property
                 var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
                 
                 if (property != null)
                 {
-                    // If we've purchased but not unlocked, hide the option
-                    if (NarcopelagoRealtor.HasPurchasedProperty(property.PropertyName) && !property.IsOwned)
+                    bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(property.PropertyName);
+                    
+                    if (locationComplete)
+                    {
+                        // Location complete - hide the option
+                        __result = false;
+                        return false; // Skip original
+                    }
+                    
+                    // Location not complete - check if player has enough money
+                    if (!HasEnoughFunds(property.Price))
                     {
                         __result = false;
-                        return;
+                        return false; // Skip original - not enough funds
                     }
+                    
+                    // Location not complete and has funds - show the option (even if owned)
+                    __result = true;
+                    return false; // Skip original
                 }
 
                 // Check if this is a business
@@ -605,17 +755,62 @@ namespace Narcopelago
                 
                 if (business != null)
                 {
-                    // If we've purchased but not unlocked, hide the option
-                    if (NarcopelagoRealtor.HasPurchasedProperty(business.PropertyName) && !business.IsOwned)
+                    bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName);
+                    
+                    if (locationComplete)
+                    {
+                        // Location complete - hide the option
+                        __result = false;
+                        return false; // Skip original
+                    }
+                    
+                    // Location not complete - check if player has enough money
+                    if (!HasEnoughFunds(business.Price))
                     {
                         __result = false;
-                        return;
+                        return false; // Skip original - not enough funds
                     }
+                    
+                    // Location not complete and has funds - show the option (even if owned)
+                    __result = true;
+                    return false; // Skip original
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[PATCH] Error in ShouldChoiceBeShown Postfix: {ex.Message}");
+                MelonLogger.Error($"[PATCH] Error in ShouldChoiceBeShown Prefix: {ex.Message}");
+            }
+
+            // Not a property/business we recognize - let original handle it
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if the player has enough funds in their online balance.
+        /// </summary>
+        private static bool HasEnoughFunds(float price)
+        {
+            try
+            {
+                if (!Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.InstanceExists)
+                {
+                    return false;
+                }
+
+                var moneyManager = Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance;
+                if (moneyManager == null)
+                {
+                    return false;
+                }
+
+                // Check online balance (bank balance)
+                float balance = moneyManager.onlineBalance;
+                return balance >= price;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[PATCH] Error checking funds: {ex.Message}");
+                return false;
             }
         }
     }

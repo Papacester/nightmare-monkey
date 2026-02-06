@@ -11,7 +11,7 @@
 
 First, you need a room to connect to. For this, you or someone you know has to generate a game.  
 This will not be explained here,
-but you can check the [Archipelago Setup Guide](/tutorial/Archipelago/setup_en#generating-a-game).
+but you can check the Archipelago Setup Guide.
 
 You also need to have [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases/latest) installed
 and the [The Schedule I apworld](https://github.com/MacH8s/Narcopelago/releases/latest) installed into Archipelago.
@@ -60,7 +60,7 @@ config file.
  - Randomized properties or businesses will not be unlocked when purchased if randomization on, properties and/or businesses will be added to the item pool
  - Recipe checks are sent when recipes are learned
  - Cash for trash are sent every 10 trash burned
- - Filler items will be sent as deaddrop quests
+ - Filler items, including bundles are claimed via the AP phone app
 
 ## Once I'm inside Schedule1, how do I play Schedule1AP
 

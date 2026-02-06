@@ -109,6 +109,10 @@ namespace Narcopelago
                     // Initialize item receiving - this will process starting items
                     NarcopelagoItems.Initialize(session);
                     
+                    // Initialize save system - loads claimed counts from disk
+                    // Sync will happen when entering game scene (after delay for AP items to replay)
+                    NarcopelagoSave.Initialize();
+                    
                     // Subscribe to Archipelago message events for phone contacts
                     NarcopelagoAPContacts.SubscribeToEvents(session);
                 }
