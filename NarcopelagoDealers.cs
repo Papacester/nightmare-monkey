@@ -212,26 +212,45 @@ namespace Narcopelago
 
         /// <summary>
         /// Marks a dealer as having their AP item received.
-        /// This enables the recruitment dialogue but does NOT recruit them in-game.
-        /// The player must still use the dialogue to complete the location check.
+        /// This enables the recruitment dialogue but does NOT recruit them in-game
+        /// unless the location check is also complete.
+        /// 
+        /// When Randomize_dealers is true:
+        /// - If location NOT complete: Just enable dialogue (don't recruit)
+        /// - If location IS complete: Recruit them in-game
+        /// 
+        /// When Randomize_dealers is false:
+        /// - Always recruit them in-game
         /// </summary>
         public static void SetDealerRecruited(string dealerName)
         {
             _dealerUnlockStatus[dealerName] = true;
             MelonLogger.Msg($"[Dealers] '{dealerName}' AP item received - recruitment dialogue now available");
 
-            // Don't recruit in-game here - the player needs to use the dialogue
-            // to complete the location check first
-            
-            // Only recruit immediately if the location is already complete
-            // (this handles the case where we're syncing from a previous session)
-            if (HasCompletedRecruitLocation(dealerName))
+            // Check if we should recruit in-game
+            if (!NarcopelagoOptions.Randomize_dealers)
             {
-                MelonLogger.Msg($"[Dealers] '{dealerName}' location already complete - recruiting in-game");
+                // Randomize_dealers is false - recruit them immediately
+                MelonLogger.Msg($"[Dealers] Recruiting '{dealerName}' - Randomize_dealers is false");
                 if (!TryRecruitDealerInGame(dealerName))
                 {
                     _pendingRecruits.Add(dealerName);
                 }
+            }
+            else if (HasCompletedRecruitLocation(dealerName))
+            {
+                // Randomize_dealers is true AND location is complete - recruit them
+                MelonLogger.Msg($"[Dealers] Recruiting '{dealerName}' - location already complete");
+                if (!TryRecruitDealerInGame(dealerName))
+                {
+                    _pendingRecruits.Add(dealerName);
+                }
+            }
+            else
+            {
+                // Randomize_dealers is true but location NOT complete
+                // Don't recruit - player needs to use dialogue first
+                MelonLogger.Msg($"[Dealers] NOT recruiting '{dealerName}' - location not complete (dialogue available)");
             }
 
             if (_inGameScene)
@@ -250,6 +269,9 @@ namespace Narcopelago
 
         /// <summary>
         /// Internal sync implementation.
+        /// When Randomize_dealers is true:
+        /// - Only recruits dealers in-game if BOTH the AP item is received AND the location is complete
+        /// - If only AP item received (no location complete), just enable the dialogue (don't recruit)
         /// </summary>
         private static void SyncFromSessionInternal()
         {
@@ -261,6 +283,10 @@ namespace Narcopelago
             }
 
             MelonLogger.Msg($"[Dealers] Syncing {session.Items.AllItemsReceived.Count} received items...");
+
+            // First, sync completed locations from Archipelago
+            // This must happen BEFORE we process items so we know which locations are complete
+            SyncCompletedRecruitsFromSession();
 
             int dealerCount = 0;
             foreach (var item in session.Items.AllItemsReceived)
@@ -276,15 +302,34 @@ namespace Narcopelago
                     {
                         _dealerUnlockStatus[dealerName] = true;
                         dealerCount++;
+                        MelonLogger.Msg($"[Dealers] Synced AP item for dealer: {dealerName}");
                     }
 
-                    TryRecruitDealerInGame(dealerName);
+                    // Only recruit in-game if BOTH conditions are met:
+                    // 1. We have the AP item (which we do if we're here)
+                    // 2. The location check is complete OR Randomize_dealers is false
+                    if (!NarcopelagoOptions.Randomize_dealers)
+                    {
+                        // Randomize_dealers is false - just recruit them
+                        TryRecruitDealerInGame(dealerName);
+                    }
+                    else if (HasCompletedRecruitLocation(dealerName))
+                    {
+                        // Randomize_dealers is true AND location is complete - recruit them
+                        MelonLogger.Msg($"[Dealers] Recruiting '{dealerName}' - has AP item AND location complete");
+                        TryRecruitDealerInGame(dealerName);
+                    }
+                    else
+                    {
+                        // Randomize_dealers is true but location NOT complete
+                        // Don't recruit - just let the dialogue be available
+                        MelonLogger.Msg($"[Dealers] NOT recruiting '{dealerName}' - has AP item but location NOT complete (dialogue available)");
+                    }
                 }
             }
 
             MelonLogger.Msg($"[Dealers] Synced {dealerCount} dealer unlocks from session");
 
-            SyncCompletedRecruitsFromSession();
             QueueDelayedPOIUpdate(60);
         }
 
@@ -550,6 +595,10 @@ namespace Narcopelago
 
         /// <summary>
         /// Determines if a dealer's POI should be shown.
+        /// POI should show if:
+        /// 1. Location check is NOT complete (need to recruit for AP)
+        /// 2. AND dealer is NOT already recruited in-game
+        /// 3. AND either: has AP item OR meets game's normal requirements
         /// </summary>
         public static bool ShouldShowDealerPOI(string dealerName, Dealer dealer)
         {
@@ -560,7 +609,7 @@ namespace Narcopelago
                 return dealer.RelationData.IsMutuallyKnown() && !dealer.RelationData.Unlocked;
             }
 
-            // If recruit location already completed, hide POI
+            // If recruit location already completed, hide POI (no need to recruit again)
             if (HasCompletedRecruitLocation(dealerName))
             {
                 return false;
@@ -572,13 +621,14 @@ namespace Narcopelago
                 return false;
             }
 
-            // If unlocked via AP, show POI (they can be recruited)
+            // Location NOT complete and dealer NOT recruited in-game
+            // Show POI if we have the AP item (allows re-recruiting after game reset)
             if (IsDealerUnlockedViaAP(dealerName))
             {
                 return true;
             }
 
-            // Otherwise, use game's default logic
+            // Otherwise, use game's default logic (mutually known requirement)
             return dealer.RelationData.IsMutuallyKnown() && !dealer.RelationData.Unlocked;
         }
     }
@@ -752,28 +802,39 @@ namespace Narcopelago
                     return;
                 }
 
-                // Location not complete - check if we should show dialogue
-                // Show dialogue if:
-                // 1. Have AP item (can complete recruitment)
-                // 2. OR don't have AP item (will send location check but block recruitment)
+                // Location NOT complete - we need to allow recruitment to send the check
                 
-                // If original returned true, keep it (game requirements met)
-                if (__result)
-                {
-                    return;
-                }
-
-                // Original returned false - check if we should override
-                // If we have the AP item, allow the dialogue even if game requirements not met
+                // If we have the AP item, ALWAYS allow the dialogue
+                // This handles the case where game was reset but we still have the AP item
                 if (NarcopelagoDealers.IsDealerUnlockedViaAP(dealerName))
                 {
                     __result = true;
                     reason = string.Empty;
+                    MelonLogger.Msg($"[PATCH] Allowing recruitment dialogue for '{dealerName}' - has AP item, location not complete");
                     return;
                 }
 
-                // Don't have AP item - keep original result
-                // (player needs to meet game requirements OR get AP item)
+                // Don't have AP item - if Randomize_dealers is true, still allow dialogue
+                // so player can send the location check (recruitment will be blocked)
+                if (NarcopelagoOptions.Randomize_dealers)
+                {
+                    // Check if player meets game's normal requirements
+                    if (__result)
+                    {
+                        // Game already allows it, keep that
+                        return;
+                    }
+                    
+                    // Game doesn't allow it - check if they're mutually known
+                    if (__instance.RelationData.IsMutuallyKnown())
+                    {
+                        __result = true;
+                        reason = string.Empty;
+                        return;
+                    }
+                }
+                
+                // Otherwise keep original result
             }
             catch (Exception ex)
             {
