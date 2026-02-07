@@ -73,6 +73,13 @@ namespace Narcopelago
                     {
                         MelonLogger.Msg($"Found location '{locationName}' with ID {locationId} for: {questTitle}, {entryName}");
                         NarcopelagoLocations.CompleteLocation(locationId);
+                        
+                        // Check if this is the final quest - complete all cartel influence locations
+                        if (locationName == "Finishing the Job|Wait for the bomb to detonate")
+                        {
+                            MelonLogger.Msg("[Quests] Final quest completed - sending all cartel influence location checks");
+                            CompleteAllCartelInfluenceLocations();
+                        }
                     }
                     else
                     {
@@ -87,6 +94,48 @@ namespace Narcopelago
             catch (Exception ex)
             {
                 MelonLogger.Error($"Error processing quest entry: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Completes all cartel influence locations.
+        /// Called when "Finishing the Job|Wait for the bomb to detonate" is completed,
+        /// since cartel influence becomes inaccessible after that point.
+        /// </summary>
+        private static void CompleteAllCartelInfluenceLocations()
+        {
+            try
+            {
+                // Get all locations with "Cartel Influence" tag
+                var cartelInfluenceLocations = Data_Locations.GetLocationsByTag("Cartel Influence");
+                
+                if (cartelInfluenceLocations == null || cartelInfluenceLocations.Count == 0)
+                {
+                    MelonLogger.Warning("[Quests] No cartel influence locations found");
+                    return;
+                }
+
+                int sentCount = 0;
+                foreach (var locationName in cartelInfluenceLocations)
+                {
+                    int locationId = Data_Locations.GetLocationId(locationName);
+                    if (locationId > 0)
+                    {
+                        // Check if not already completed
+                        if (!NarcopelagoLocations.IsLocationChecked(locationId))
+                        {
+                            MelonLogger.Msg($"[Quests] Completing cartel influence location: {locationName} (ID: {locationId})");
+                            NarcopelagoLocations.CompleteLocation(locationId);
+                            sentCount++;
+                        }
+                    }
+                }
+
+                MelonLogger.Msg($"[Quests] Completed {sentCount} cartel influence locations");
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[Quests] Error completing cartel influence locations: {ex.Message}");
             }
         }
 
