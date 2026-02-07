@@ -93,6 +93,15 @@ namespace Narcopelago
                 
                 // Check for Archipelago disconnection and handle save + exit
                 NarcopelagoDisconnect.ProcessMainThreadQueue();
+                
+                // Update networth display UI
+                NarcopelagoNetworthDisplay.ProcessMainThreadQueue();
+            }
+
+            public override void OnGUI()
+            {
+                // Draw the networth display using Unity's immediate mode GUI
+                NarcopelagoNetworthDisplay.OnGUI();
             }
 
             public override void OnSceneWasLoaded(int buildIndex, string sceneName)
@@ -114,6 +123,7 @@ namespace Narcopelago
                 NarcopelagoFillers.SetInGameScene(isGameScene);
                 NarcopelagoDisconnect.SetInGameScene(isGameScene);
                 NarcopelagoSave.SetInGameScene(isGameScene);
+                NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
             
             // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
             if (isGameScene && NarcopelagoItems.IsInitialized)
