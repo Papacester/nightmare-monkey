@@ -482,7 +482,7 @@ namespace Narcopelago
             titleBarRect.anchorMin = new Vector2(0, 1);
             titleBarRect.anchorMax = new Vector2(1, 1);
             titleBarRect.pivot = new Vector2(0.5f, 1);
-            titleBarRect.sizeDelta = new Vector2(0, 50);
+            titleBarRect.sizeDelta = new Vector2(0, 125); // 3x larger to accommodate big close button
             var titleBarImg = titleBar.AddComponent<Image>();
             titleBarImg.color = new Color(0.15f, 0.15f, 0.2f, 1f);
 
@@ -492,7 +492,7 @@ namespace Narcopelago
             var titleText = titleGO.AddComponent<Text>();
             titleText.text = "Archipelago Items";
             titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            titleText.fontSize = 20;
+            titleText.fontSize = 50; // 2.5x larger (20 * 2.5) instead of 5x
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
             var titleRect = titleGO.GetComponent<RectTransform>();
@@ -511,15 +511,15 @@ namespace Narcopelago
             closeRect.anchorMin = new Vector2(1, 0.5f);
             closeRect.anchorMax = new Vector2(1, 0.5f);
             closeRect.pivot = new Vector2(1, 0.5f);
-            closeRect.anchoredPosition = new Vector2(-5, 0);
-            closeRect.sizeDelta = new Vector2(35, 35);
+            closeRect.anchoredPosition = new Vector2(-15, 0); // Move further from edge for larger button
+            closeRect.sizeDelta = new Vector2(70, 70); // Smaller to fit in title bar better
 
             var closeLabelGO = new GameObject("Label");
             closeLabelGO.transform.SetParent(closeGO.transform, false);
             var closeLabel = closeLabelGO.AddComponent<Text>();
             closeLabel.text = "X";
             closeLabel.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            closeLabel.fontSize = 18;
+            closeLabel.fontSize = 45; // 2.5x larger (18 * 2.5) instead of 5x
             closeLabel.alignment = TextAnchor.MiddleCenter;
             closeLabel.color = Color.white;
             var closeLabelRect = closeLabelGO.GetComponent<RectTransform>();
@@ -537,7 +537,7 @@ namespace Narcopelago
             scrollRect.anchorMin = new Vector2(0, 0);
             scrollRect.anchorMax = new Vector2(1, 1);
             scrollRect.offsetMin = new Vector2(5, 5);
-            scrollRect.offsetMax = new Vector2(-5, -55);
+            scrollRect.offsetMax = new Vector2(-5, -155); // Adjust for taller title bar
 
             var scrollView = scrollGO.AddComponent<ScrollRect>();
             scrollView.horizontal = false;
@@ -555,9 +555,9 @@ namespace Narcopelago
             contentRect.pivot = new Vector2(0.5f, 1);
             contentRect.sizeDelta = new Vector2(0, 0);
 
-            var vertLayout = contentGO.AddComponent<VerticalLayoutGroup>();
-            vertLayout.spacing = 4;
-            vertLayout.padding = new RectOffset(5, 5, 5, 5);
+                var vertLayout = contentGO.AddComponent<VerticalLayoutGroup>();
+                vertLayout.spacing = 10; // 2.5x larger spacing (4 * 2.5)
+                vertLayout.padding = new RectOffset(12, 12, 12, 12); // 2.5x larger padding
             vertLayout.childAlignment = TextAnchor.UpperCenter;
             vertLayout.childControlWidth = true;
             vertLayout.childControlHeight = false;
@@ -576,7 +576,7 @@ namespace Narcopelago
             _emptyText = emptyGO.AddComponent<Text>();
             _emptyText.text = "No items to claim";
             _emptyText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            _emptyText.fontSize = 16;
+            _emptyText.fontSize = 40; // 2.5x larger (16 * 2.5) instead of 5x
             _emptyText.alignment = TextAnchor.MiddleCenter;
             _emptyText.color = new Color(0.5f, 0.5f, 0.5f, 1f);
             var emptyRect = emptyGO.GetComponent<RectTransform>();
@@ -641,11 +641,12 @@ namespace Narcopelago
                 _appButton.name = "ArchipelagoAppButton";
 
                 // Update the label text
-                var texts = _appButton.GetComponentsInChildren<Text>(true);
-                foreach (var t in texts)
-                {
-                    t.text = "AP Items";
-                }
+                    var texts = _appButton.GetComponentsInChildren<Text>(true);
+                    foreach (var t in texts)
+                    {
+                        t.text = "AP Items";
+                        t.fontSize = Mathf.Max((int)(t.fontSize * 2.5f), 25); // 2.5x larger font, minimum 25
+                    }
 
                 // Update the icon sprite if we have a custom one
                 if (icon != null)
@@ -700,7 +701,7 @@ namespace Narcopelago
                 btn.onClick.AddListener((UnityAction)OnAppButtonClicked);
 
                 var btnRect = _appButton.GetComponent<RectTransform>();
-                btnRect.sizeDelta = new Vector2(80, 80);
+                btnRect.sizeDelta = new Vector2(200, 200); // 2.5x larger (80 * 2.5) instead of 5x
 
                 // Icon
                 if (icon != null)
@@ -722,7 +723,7 @@ namespace Narcopelago
                 var label = labelGO.AddComponent<Text>();
                 label.text = "AP Items";
                 label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                label.fontSize = 10;
+                label.fontSize = 25; // 2.5x larger (10 * 2.5) instead of 5x
                 label.alignment = TextAnchor.LowerCenter;
                 label.color = Color.white;
                 var labelRect = labelGO.GetComponent<RectTransform>();
@@ -778,11 +779,11 @@ namespace Narcopelago
                 entryGO.transform.SetParent(_listContent, false);
 
                 var entryRect = entryGO.AddComponent<RectTransform>();
-                entryRect.sizeDelta = new Vector2(0, 40);
+                entryRect.sizeDelta = new Vector2(0, 100); // 2.5x larger (40 * 2.5) instead of 5x
 
                 var entryLayout = entryGO.AddComponent<HorizontalLayoutGroup>();
-                entryLayout.spacing = 5;
-                entryLayout.padding = new RectOffset(5, 5, 2, 2);
+                entryLayout.spacing = 12; // 2.5x larger spacing (5 * 2.5)
+                entryLayout.padding = new RectOffset(12, 12, 5, 5); // 2.5x larger padding
                 entryLayout.childAlignment = TextAnchor.MiddleLeft;
                 entryLayout.childControlWidth = true;
                 entryLayout.childControlHeight = true;
@@ -805,7 +806,7 @@ namespace Narcopelago
                 var nameText = nameGO.AddComponent<Text>();
                 nameText.text = claimItem.DisplayName;
                 nameText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                nameText.fontSize = 14;
+                nameText.fontSize = 35; // 2.5x larger (14 * 2.5) instead of 5x
                 nameText.color = Color.white;
                 nameText.alignment = TextAnchor.MiddleLeft;
                 var nameLayout = nameGO.AddComponent<LayoutElement>();
@@ -818,15 +819,16 @@ namespace Narcopelago
                 claimBtnImg.color = new Color(0.2f, 0.6f, 0.2f, 1f);
                 var claimBtn = claimGO.AddComponent<Button>();
                 var claimLayout = claimGO.AddComponent<LayoutElement>();
-                claimLayout.minWidth = 60;
-                claimLayout.preferredWidth = 60;
+                claimLayout.minWidth = 150; // 2.5x larger (60 * 2.5)
+                claimLayout.preferredWidth = 150;
+                claimLayout.flexibleWidth = 0; // Prevent flexible sizing for uniform button width
 
                 var claimLabelGO = new GameObject("Label");
                 claimLabelGO.transform.SetParent(claimGO.transform, false);
                 var claimLabel = claimLabelGO.AddComponent<Text>();
                 claimLabel.text = "Claim";
                 claimLabel.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-                claimLabel.fontSize = 12;
+                claimLabel.fontSize = 30; // 2.5x larger (12 * 2.5) instead of 5x
                 claimLabel.alignment = TextAnchor.MiddleCenter;
                 claimLabel.color = Color.white;
                 var claimLabelRect = claimLabelGO.GetComponent<RectTransform>();
