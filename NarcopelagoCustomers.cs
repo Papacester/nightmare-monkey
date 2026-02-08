@@ -349,7 +349,17 @@ namespace Narcopelago
                     string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, customerName))
                     {
-                        MelonLogger.Msg($"[Customers] '{customerName}' already unlocked in-game");
+                        // Customer is already in UnlockedCustomers list
+                        // But ensure RelationData.Unlocked is also true (for dealer assignment)
+                        if (customer.NPC.RelationData != null && !customer.NPC.RelationData.Unlocked)
+                        {
+                            customer.NPC.RelationData.Unlocked = true;
+                            MelonLogger.Msg($"[Customers] '{customerName}' was in UnlockedCustomers but RelationData.Unlocked was false - fixed");
+                        }
+                        else
+                        {
+                            MelonLogger.Msg($"[Customers] '{customerName}' already unlocked in-game");
+                        }
                         return true;
                     }
                 }
@@ -377,13 +387,32 @@ namespace Narcopelago
                                 Customer_OnCustomerUnlocked_Patch.SetArchipelagoUnlock(false);
                             }
                             
+                            // Verify the customer was moved to UnlockedCustomers
+                            if (!Customer.UnlockedCustomers.Contains(customer))
+                            {
+                                MelonLogger.Warning($"[Customers] '{customerName}' was not added to UnlockedCustomers - manually adding");
+                                Customer.UnlockedCustomers.Add(customer);
+                            }
+                            if (Customer.LockedCustomers.Contains(customer))
+                            {
+                                MelonLogger.Warning($"[Customers] '{customerName}' still in LockedCustomers - manually removing");
+                                Customer.LockedCustomers.Remove(customer);
+                            }
+                            
                             // Queue POI update after unlock
                             QueueDelayedPOIUpdate(5);
                             return true;
                         }
                         else if (relationData != null && relationData.Unlocked)
                         {
-                            MelonLogger.Msg($"[Customers] '{customerName}' already unlocked in-game");
+                            // Customer is in LockedCustomers but RelationData says unlocked
+                            // This is a stale state - move them to UnlockedCustomers
+                            MelonLogger.Warning($"[Customers] '{customerName}' was in LockedCustomers but RelationData.Unlocked was true - fixing list placement");
+                            if (!Customer.UnlockedCustomers.Contains(customer))
+                            {
+                                Customer.UnlockedCustomers.Add(customer);
+                            }
+                            Customer.LockedCustomers.Remove(customer);
                             return true;
                         }
                     }
