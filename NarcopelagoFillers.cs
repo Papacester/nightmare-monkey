@@ -112,13 +112,11 @@ namespace Narcopelago
 
         /// <summary>
         /// Checks if an item is a filler item.
+        /// Filler items have one of the four filler tier tags: Bad, Basic, Better, Amazing.
         /// </summary>
         public static bool IsFillerItem(string itemName)
         {
-            return Data_Items.HasTag(itemName, "Bad Filler") ||
-                   Data_Items.HasTag(itemName, "Basic Filler") ||
-                   Data_Items.HasTag(itemName, "Better Filler") ||
-                   Data_Items.HasTag(itemName, "Amazing Filler");
+            return Data_Items.HasAnyTag(itemName, "Bad Filler", "Basic Filler", "Better Filler", "Amazing Filler");
         }
 
         /// <summary>
@@ -1091,3 +1089,4 @@ namespace Narcopelago
         #endregion
     }
 }
+

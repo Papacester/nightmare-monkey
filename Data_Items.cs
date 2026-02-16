@@ -1,15 +1,18 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Narcopelago
 {
     /// <summary>
     /// Represents a single item entry from items.json
+    /// Classification is now a dictionary where keys are conditions (e.g., "default", "!randomize_customers")
+    /// and values are lists of classifications (e.g., ["PROGRESSION", "USEFUL"])
     /// </summary>
     public class ItemData
     {
         [JsonProperty("classification")]
-        public List<string> Classification { get; set; }
+        public Dictionary<string, List<string>> Classification { get; set; }
 
         [JsonProperty("tags")]
         public List<string> Tags { get; set; }
@@ -89,12 +92,54 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Checks if an item has a specific classification
+        /// Checks if an item has a specific classification under any condition.
+        /// Searches all classification condition keys (default, !randomize_customers, etc.)
         /// </summary>
         public static bool HasClassification(string itemName, string classification)
         {
             var item = GetItem(itemName);
-            return item?.Classification?.Contains(classification) ?? false;
+            if (item?.Classification == null)
+                return false;
+
+            // Check all condition keys for the classification
+            foreach (var kvp in item.Classification)
+            {
+                if (kvp.Value?.Contains(classification) == true)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if an item has a specific classification under the "default" condition.
+        /// </summary>
+        public static bool HasDefaultClassification(string itemName, string classification)
+        {
+            var item = GetItem(itemName);
+            if (item?.Classification == null)
+                return false;
+
+            if (item.Classification.TryGetValue("default", out var defaultClassifications))
+            {
+                return defaultClassifications?.Contains(classification) == true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Gets all classifications for an item under a specific condition key.
+        /// </summary>
+        public static List<string> GetClassifications(string itemName, string conditionKey = "default")
+        {
+            var item = GetItem(itemName);
+            if (item?.Classification == null)
+                return new List<string>();
+
+            if (item.Classification.TryGetValue(conditionKey, out var classifications))
+            {
+                return classifications ?? new List<string>();
+            }
+            return new List<string>();
         }
 
         /// <summary>
@@ -107,7 +152,24 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Gets all items with a specific classification
+        /// Checks if an item has any of the specified tags
+        /// </summary>
+        public static bool HasAnyTag(string itemName, params string[] tags)
+        {
+            var item = GetItem(itemName);
+            if (item?.Tags == null)
+                return false;
+
+            foreach (var tag in tags)
+            {
+                if (item.Tags.Contains(tag))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Gets all items with a specific classification (under any condition)
         /// </summary>
         public static List<string> GetItemsByClassification(string classification)
         {
@@ -116,7 +178,7 @@ namespace Narcopelago
             {
                 foreach (var kvp in Items)
                 {
-                    if (kvp.Value.Classification?.Contains(classification) == true)
+                    if (HasClassification(kvp.Key, classification))
                         result.Add(kvp.Key);
                 }
             }
@@ -135,6 +197,32 @@ namespace Narcopelago
                 {
                     if (kvp.Value.Tags?.Contains(tag) == true)
                         result.Add(kvp.Key);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets all items that have any of the specified tags
+        /// </summary>
+        public static List<string> GetItemsByAnyTag(params string[] tags)
+        {
+            var result = new List<string>();
+            if (Items != null)
+            {
+                foreach (var kvp in Items)
+                {
+                    if (kvp.Value.Tags != null)
+                    {
+                        foreach (var tag in tags)
+                        {
+                            if (kvp.Value.Tags.Contains(tag))
+                            {
+                                result.Add(kvp.Key);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
             return result;
