@@ -85,11 +85,6 @@ namespace Narcopelago
             _pendingTraps.Enqueue((trapType, itemName));
             MelonLogger.Msg($"[Traps] Queued trap '{itemName}' for processing");
         }
-
-                public static bool IsTrapItem(string itemName)
-        {
-            return Data_Items.HasTag(itemName, "Trap");
-        }
         
         private static bool TryGetTrapType(string itemName, out TrapType trapType)
         {
