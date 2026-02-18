@@ -239,9 +239,11 @@ namespace Narcopelago
             MelonLogger.Msg($"[Suppliers] Syncing {session.Items.AllItemsReceived.Count} received items...");
 
             int supplierCount = 0;
+            int checkedCount = 0;
             foreach (var item in session.Items.AllItemsReceived)
             {
                 string itemName = item.ItemName;
+                checkedCount++;
 
                 // Check if it's a supplier unlock item
                 if (itemName.EndsWith(" Unlocked") && Data_Items.HasTag(itemName, "Supplier"))
@@ -252,13 +254,15 @@ namespace Narcopelago
                     {
                         _supplierUnlockStatus[supplierName] = true;
                         supplierCount++;
+                        MelonLogger.Msg($"[Suppliers] Synced AP unlock for: {supplierName}");
                     }
 
+                    // Always try to unlock when we have the AP item
                     TryUnlockSupplierInGame(supplierName);
                 }
             }
 
-            MelonLogger.Msg($"[Suppliers] Synced {supplierCount} supplier unlocks from session");
+            MelonLogger.Msg($"[Suppliers] Checked {checkedCount} items, synced {supplierCount} supplier unlocks from session");
 
             SyncCompletedBefriendsFromSession();
         }
@@ -331,46 +335,58 @@ namespace Narcopelago
         {
             try
             {
+                MelonLogger.Msg($"[Suppliers] Attempting to unlock '{supplierName}' in-game...");
+                
                 // Find the supplier in NPCRegistry
+                int npcCount = 0;
+                int supplierCount = 0;
                 foreach (var npc in NPCManager.NPCRegistry)
                 {
                     if (npc == null) continue;
+                    npcCount++;
 
                     // Check if this NPC is a Supplier
                     var supplier = npc.TryCast<Supplier>();
                     if (supplier == null) continue;
+                    supplierCount++;
 
                     string name = supplier.fullName ?? supplier.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, supplierName))
                     {
-                        if (!supplier.RelationData.Unlocked)
+                        MelonLogger.Msg($"[Suppliers] Found supplier '{name}' (Unlocked: {supplier.RelationData?.Unlocked}, IsKnown: {supplier.RelationData?.IsKnown()})");
+                        
+                        Supplier_SetUnlocked_Patch.SetArchipelagoUnlock(true);
+                        try
                         {
-                            Supplier_SetUnlocked_Patch.SetArchipelagoUnlock(true);
-                            try
+                            // First reset Unlocked to false so that the SetUnlocked RPC
+                            // actually runs its full initialization logic instead of early-returning
+                            if (supplier.RelationData != null)
                             {
-                                supplier.RelationData.Unlock(NPCRelationData.EUnlockType.Recommendation, true);
-                                MelonLogger.Msg($"[Suppliers] '{supplierName}' unlocked in-game");
+                                supplier.RelationData.Unlocked = false;
                             }
-                            finally
-                            {
-                                Supplier_SetUnlocked_Patch.SetArchipelagoUnlock(false);
-                            }
-                            return true;
+                            
+                            // Now call the full unlock which goes through the game's proper flow
+                            // This triggers Supplier.RpcLogic___SetUnlocked which sets up
+                            // phone contacts, ordering ability, etc.
+                            supplier.RelationData.Unlock(NPCRelationData.EUnlockType.Recommendation, true);
+                            MelonLogger.Msg($"[Suppliers] '{supplierName}' unlock completed! (Unlocked: {supplier.RelationData?.Unlocked})");
                         }
-                        else
+                        finally
                         {
-                            MelonLogger.Msg($"[Suppliers] '{supplierName}' already unlocked in-game");
-                            return true;
+                            Supplier_SetUnlocked_Patch.SetArchipelagoUnlock(false);
                         }
+                        return true;
                     }
                 }
 
+                MelonLogger.Msg($"[Suppliers] Could not find supplier '{supplierName}' (searched {npcCount} NPCs, {supplierCount} suppliers)");
                 return false;
             }
             catch (Exception ex)
             {
                 MelonLogger.Error($"[Suppliers] Error unlocking '{supplierName}': {ex.Message}");
-                return true;
+                MelonLogger.Error($"[Suppliers] Stack trace: {ex.StackTrace}");
+                return true; // Return true to prevent infinite requeue
             }
         }
 
