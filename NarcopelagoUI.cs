@@ -300,6 +300,68 @@ namespace Narcopelago
             statusRect.anchoredPosition = new Vector2(0, 5); // just above the button
             statusRect.sizeDelta = new Vector2(300, 30);
 
+            // Mute Archipelago Messages checkbox
+            GameObject muteGO = new GameObject("MuteArchipelagoToggle");
+            muteGO.transform.SetParent(panel.transform, false);
+
+            Toggle muteToggle = muteGO.AddComponent<Toggle>();
+
+            // Checkbox background
+            GameObject muteBgGO = new GameObject("Background");
+            muteBgGO.transform.SetParent(muteGO.transform, false);
+            Image muteBgImage = muteBgGO.AddComponent<Image>();
+            muteBgImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            RectTransform muteBgRect = muteBgGO.GetComponent<RectTransform>();
+            muteBgRect.anchorMin = new Vector2(0f, 0.5f);
+            muteBgRect.anchorMax = new Vector2(0f, 0.5f);
+            muteBgRect.pivot = new Vector2(0f, 0.5f);
+            muteBgRect.anchoredPosition = Vector2.zero;
+            muteBgRect.sizeDelta = new Vector2(20, 20);
+
+            // Checkmark
+            GameObject muteCheckGO = new GameObject("Checkmark");
+            muteCheckGO.transform.SetParent(muteBgGO.transform, false);
+            Image muteCheckImage = muteCheckGO.AddComponent<Image>();
+            muteCheckImage.color = Color.green;
+            RectTransform muteCheckRect = muteCheckGO.GetComponent<RectTransform>();
+            muteCheckRect.anchorMin = new Vector2(0.15f, 0.15f);
+            muteCheckRect.anchorMax = new Vector2(0.85f, 0.85f);
+            muteCheckRect.offsetMin = Vector2.zero;
+            muteCheckRect.offsetMax = Vector2.zero;
+
+            muteToggle.graphic = muteCheckImage;
+            muteToggle.targetGraphic = muteBgImage;
+            muteToggle.isOn = false;
+
+            // Label
+            GameObject muteLabelGO = new GameObject("Label");
+            muteLabelGO.transform.SetParent(muteGO.transform, false);
+            Text muteLabel = muteLabelGO.AddComponent<Text>();
+            muteLabel.text = "Mute AP Global Messages";
+            muteLabel.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            muteLabel.fontSize = 14;
+            muteLabel.color = Color.white;
+            muteLabel.alignment = TextAnchor.MiddleLeft;
+            RectTransform muteLabelRect = muteLabelGO.GetComponent<RectTransform>();
+            muteLabelRect.anchorMin = new Vector2(0f, 0.5f);
+            muteLabelRect.anchorMax = new Vector2(0f, 0.5f);
+            muteLabelRect.pivot = new Vector2(0f, 0.5f);
+            muteLabelRect.anchoredPosition = new Vector2(25, 0);
+            muteLabelRect.sizeDelta = new Vector2(250, 20);
+
+            RectTransform muteRect = muteGO.GetComponent<RectTransform>();
+            muteRect.anchorMin = new Vector2(0.5f, 0f);
+            muteRect.anchorMax = new Vector2(0.5f, 0f);
+            muteRect.pivot = new Vector2(0.5f, 0f);
+            muteRect.anchoredPosition = new Vector2(-20, -20);
+            muteRect.sizeDelta = new Vector2(300, 24);
+
+            muteToggle.onValueChanged.AddListener((UnityAction<bool>)((bool isOn) =>
+            {
+                NarcopelagoAPContacts.MuteAllMessages = isOn;
+                MelonLogger.Msg($"[UI] Mute AP Global Messages: {isOn}");
+            }));
+
             Schedule1PanelManager.StatusText = statusText;
             Schedule1PanelManager.HostField = hostField;
             Schedule1PanelManager.PortField = portField;

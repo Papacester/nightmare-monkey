@@ -519,6 +519,8 @@
 		<Compile Include="NarcopelagoLevels.cs" />
 		<Compile Include="NarcopelagoLocations.cs" />
 		<Compile Include="NarcopelagoMainMenu.cs" />
+		<Compile Include="NarcopelagoMessageStressTest.cs" />
+		<Compile Include="NarcopelagoMessageStressTest.cs" />
 		<Compile Include="NarcopelagoNetworthDisplay.cs" />
 		<Compile Include="NarcopelagoOptions.cs" />
 		<Compile Include="NarcopelagoQuests.cs" />

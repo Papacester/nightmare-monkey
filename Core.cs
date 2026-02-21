@@ -99,6 +99,9 @@ namespace Narcopelago
                 
                 // Update networth display UI
                 NarcopelagoNetworthDisplay.ProcessMainThreadQueue();
+                
+                // Debug: message stress test keybind ('-' to toggle)
+                // NarcopelagoMessageStressTest.Update();
             }
 
             public override void OnGUI()

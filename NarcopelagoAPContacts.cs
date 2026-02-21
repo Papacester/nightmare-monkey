@@ -21,10 +21,15 @@ namespace Narcopelago
     /// <summary>
     /// Manages Archipelago-related phone contacts and text messaging in Schedule I.
     /// Provides two phone contacts that send text messages:
-    /// 1. "Archipelago" - Receives ALL item sent messages and deathlinks from the multiworld
+    /// 1. "Archipelago" - Receives item sent messages that do NOT mention our player
     /// 2. "AP (You)" - Receives only messages mentioning our player name and deathlinks
     /// 
-    /// These contacts appear in the phone's Messages app and send actual text messages.
+    /// Contacts are mutually exclusive: a message goes to one or the other, never both.
+    /// The "Archipelago" contact can be muted via a UI toggle, in which case
+    /// only "AP (You)" messages are delivered.
+    /// 
+    /// Messages are rate-limited to avoid FPS drops when the server sends thousands
+    /// of messages in quick succession (e.g. during initial sync or large multiworlds).
     /// </summary>
     public static class NarcopelagoAPContacts
     {
@@ -33,11 +38,39 @@ namespace Narcopelago
         private const string CONTACT_FILTERED = "AP (You)";
 
         /// <summary>
+        /// When true, the "Archipelago" (all messages) contact is muted.
+        /// Only "AP (You)" messages will be delivered.
+        /// Toggled via the main menu UI checkbox.
+        /// </summary>
+        public static bool MuteAllMessages { get; set; } = false;
+
+        /// <summary>
         /// Queue of messages to send via phone text.
         /// Tuple: (contactName, message)
         /// </summary>
         private static ConcurrentQueue<(string contactName, string message)> _messageQueue = 
             new ConcurrentQueue<(string, string)>();
+
+        /// <summary>
+        /// Minimum interval in seconds between processing batches of messages.
+        /// Prevents FPS drops when thousands of messages arrive at once.
+        /// </summary>
+        private const float MESSAGE_PROCESS_INTERVAL = 0.25f;
+
+        /// <summary>
+        /// Maximum messages to process per batch.
+        /// </summary>
+        private const int MAX_MESSAGES_PER_BATCH = 5;
+
+        /// <summary>
+        /// Maximum messages allowed to queue. Oldest non-player messages are dropped when exceeded.
+        /// </summary>
+        private const int MAX_QUEUE_SIZE = 200;
+
+        /// <summary>
+        /// Time of the last message processing batch.
+        /// </summary>
+        private static float _lastProcessTime = 0f;
 
         /// <summary>
         /// Tracks if we're in a game scene where messaging is available.
@@ -170,6 +203,9 @@ namespace Narcopelago
 
         /// <summary>
         /// Called when an Archipelago message is received.
+        /// Routes each message to exactly one contact:
+        /// - If it mentions our player name → AP (You) only
+        /// - Otherwise → Archipelago only (if not muted)
         /// </summary>
         private static void OnArchipelagoMessageReceived(LogMessage message)
         {
@@ -188,27 +224,26 @@ namespace Narcopelago
                 if (!isItemMessage && !isHintMessage)
                     return;
 
-                // Add to all messages history
-                AddToHistory(_allMessagesHistory, messageText);
-
-                // Queue message for "Archipelago" contact (all messages)
-                _messageQueue.Enqueue((CONTACT_ALL, messageText));
-
                 // Check if this message mentions our player name
                 string playerName = ConnectionHandler.LastSlotName ?? "";
-                if (!string.IsNullOrEmpty(playerName))
+                bool mentionsUs = !string.IsNullOrEmpty(playerName) &&
+                                  messageText.Contains(playerName, StringComparison.OrdinalIgnoreCase);
+
+                if (mentionsUs)
                 {
-                    if (messageText.Contains(playerName, StringComparison.OrdinalIgnoreCase))
+                    // Player-specific → AP (You) only
+                    AddToHistory(_filteredMessagesHistory, messageText);
+                    _messageQueue.Enqueue((CONTACT_FILTERED, messageText));
+                }
+                else
+                {
+                    // General message → Archipelago only (respects mute)
+                    AddToHistory(_allMessagesHistory, messageText);
+                    if (!MuteAllMessages)
                     {
-                        // Add to filtered history
-                        AddToHistory(_filteredMessagesHistory, messageText);
-                        
-                        // Queue message for "AP (You)" contact
-                        _messageQueue.Enqueue((CONTACT_FILTERED, messageText));
+                        _messageQueue.Enqueue((CONTACT_ALL, messageText));
                     }
                 }
-
-                MelonLogger.Msg($"[APContacts] Received: {messageText}");
             }
             catch (Exception ex)
             {
@@ -250,38 +285,28 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Queues a deathlink message for both contacts.
+        /// Queues a deathlink message. DeathLinks always go to AP (You) since they affect us.
         /// Called from NarcopelagoDeathLink when a deathlink is received.
         /// </summary>
         public static void OnDeathLinkReceived(string source, string cause)
         {
             string message = $"☠️ {source} {cause}";
             
-            // Add to histories
-            AddToHistory(_allMessagesHistory, message);
             AddToHistory(_filteredMessagesHistory, message);
-            
-            // DeathLinks go to both contacts
-            _messageQueue.Enqueue((CONTACT_ALL, message));
             _messageQueue.Enqueue((CONTACT_FILTERED, message));
             
             MelonLogger.Msg($"[APContacts] DeathLink received: {message}");
         }
 
         /// <summary>
-        /// Queues a deathlink sent message for both contacts.
+        /// Queues a deathlink sent message. DeathLinks always go to AP (You) since they affect us.
         /// Called from NarcopelagoDeathLink when we send a deathlink.
         /// </summary>
         public static void OnDeathLinkSent(string playerName, string cause)
         {
             string message = $"☠️ You {cause}";
             
-            // Add to histories
-            AddToHistory(_allMessagesHistory, message);
             AddToHistory(_filteredMessagesHistory, message);
-            
-            // DeathLinks go to both contacts
-            _messageQueue.Enqueue((CONTACT_ALL, message));
             _messageQueue.Enqueue((CONTACT_FILTERED, message));
             
             MelonLogger.Msg($"[APContacts] DeathLink sent: {message}");
@@ -289,6 +314,7 @@ namespace Narcopelago
 
         /// <summary>
         /// Process queued messages on the main thread.
+        /// Rate-limited to avoid FPS drops when thousands of messages arrive at once.
         /// Call this from Core.OnUpdate().
         /// </summary>
         public static void ProcessMainThreadQueue()
@@ -299,6 +325,16 @@ namespace Narcopelago
             // Process pending initialization
             ProcessPendingInit();
 
+            // Rate-limit: only process a batch every MESSAGE_PROCESS_INTERVAL seconds
+            float now = Time.unscaledTime;
+            if (now - _lastProcessTime < MESSAGE_PROCESS_INTERVAL)
+                return;
+
+            // If queue is too large, trim non-player messages to prevent unbounded growth
+            TrimQueueIfNeeded();
+
+            _lastProcessTime = now;
+
             // If contacts aren't initialized, use fallback notification system
             if (!_contactsInitialized)
             {
@@ -306,10 +342,10 @@ namespace Narcopelago
                 return;
             }
 
-            // Process up to 3 messages per frame to avoid spamming
+            // Process a small batch per interval
             int processed = 0;
 
-            while (processed < 3 && _messageQueue.TryDequeue(out var msg))
+            while (processed < MAX_MESSAGES_PER_BATCH && _messageQueue.TryDequeue(out var msg))
             {
                 try
                 {
@@ -319,10 +355,50 @@ namespace Narcopelago
                 catch (Exception ex)
                 {
                     MelonLogger.Error($"[APContacts] Error sending text message: {ex.Message}");
-                    // Fall back to notification
                     SendFallbackNotification(msg.contactName, msg.message);
                 }
             }
+        }
+
+        /// <summary>
+        /// Trims the message queue when it exceeds MAX_QUEUE_SIZE.
+        /// Keeps all AP (You) messages and drops oldest Archipelago messages.
+        /// </summary>
+        private static void TrimQueueIfNeeded()
+        {
+            if (_messageQueue.Count <= MAX_QUEUE_SIZE)
+                return;
+
+            // Drain, keep player messages and newest general messages
+            var allMessages = new List<(string contactName, string message)>();
+            while (_messageQueue.TryDequeue(out var msg))
+            {
+                allMessages.Add(msg);
+            }
+
+            var playerMessages = new List<(string, string)>();
+            var generalMessages = new List<(string, string)>();
+
+            foreach (var msg in allMessages)
+            {
+                if (msg.contactName == CONTACT_FILTERED)
+                    playerMessages.Add(msg);
+                else
+                    generalMessages.Add(msg);
+            }
+
+            // Keep all player messages, and only the newest general messages that fit
+            int generalBudget = Math.Max(0, MAX_QUEUE_SIZE - playerMessages.Count);
+            int generalSkip = Math.Max(0, generalMessages.Count - generalBudget);
+
+            foreach (var msg in playerMessages)
+                _messageQueue.Enqueue(msg);
+
+            for (int i = generalSkip; i < generalMessages.Count; i++)
+                _messageQueue.Enqueue(generalMessages[i]);
+
+            if (generalSkip > 0)
+                MelonLogger.Msg($"[APContacts] Trimmed {generalSkip} older Archipelago messages from queue");
         }
 
         /// <summary>
@@ -543,11 +619,6 @@ namespace Narcopelago
                 // notify: true to show notification popup
                 // network: false because this is local only
                 conversation.SendMessage(message, true, false);
-                
-                // Log success with truncated message
-                string truncatedMsg = messageText.Length > 50 ? messageText.Substring(0, 50) + "..." : messageText;
-                MelonLogger.Msg($"[APContacts] Sent text to '{contactName}': {truncatedMsg}");
-                MelonLogger.Msg($"[APContacts] Conversation messageHistory count: {conversation.messageHistory.Count}");
             }
             catch (Exception ex)
             {
@@ -590,6 +661,17 @@ namespace Narcopelago
             {
                 MelonLogger.Error($"[APContacts] Failed to send fallback notification: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Enqueues a pre-formatted message for delivery to a specific contact.
+        /// Used by the stress test and can be used by other systems that need to
+        /// inject messages without going through the Archipelago LogMessage pipeline.
+        /// Thread-safe.
+        /// </summary>
+        public static void EnqueueMessage(string contactName, string messageText)
+        {
+            _messageQueue.Enqueue((contactName, messageText));
         }
 
         /// <summary>
