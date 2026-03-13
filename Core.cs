@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.2.2", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.3.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -90,6 +90,9 @@ namespace Narcopelago
             
                 // Process any queued trap effects on the main thread
                 NarcopelagoTraps.ProcessMainThreadQueue();
+                
+                // Process sewer-related operations on the main thread
+                NarcopelagoSewer.ProcessMainThreadQueue();
             
                 // Process save system (delayed sync of claimable items)
                 NarcopelagoSave.ProcessMainThreadQueue();
@@ -128,6 +131,7 @@ namespace Narcopelago
             NarcopelagoRealtor.SetInGameScene(isGameScene);
             NarcopelagoFillers.SetInGameScene(isGameScene);
             NarcopelagoTraps.SetInGameScene(isGameScene);
+            NarcopelagoSewer.SetInGameScene(isGameScene);
             NarcopelagoDisconnect.SetInGameScene(isGameScene);
             NarcopelagoSave.SetInGameScene(isGameScene);
             NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
@@ -145,6 +149,7 @@ namespace Narcopelago
                 NarcopelagoCashForTrash.SyncFromSession();
                 NarcopelagoRecipeChecks.SyncFromSession();
                 NarcopelagoRealtor.SyncFromSession();
+                NarcopelagoSewer.SyncFromSession();
             }
             }
 

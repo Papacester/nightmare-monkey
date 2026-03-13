@@ -61,6 +61,7 @@ config file.
  - Recipe checks are sent when recipes are learned
  - Cash for trash are sent every 10 trash burned
  - Filler items, including bundles are claimed via the AP phone app
+ - Purchasing from Jen Heard and entering keycode into sewer office counts as a check
 
 ## Once I'm inside Schedule1, how do I play Schedule1AP
 
