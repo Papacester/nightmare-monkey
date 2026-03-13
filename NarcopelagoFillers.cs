@@ -116,7 +116,7 @@ namespace Narcopelago
         /// </summary>
         public static bool IsFillerItem(string itemName)
         {
-            return Data_Items.HasAnyTag(itemName, "Bad Filler", "Basic Filler", "Better Filler", "Amazing Filler");
+            return Data_Items.HasAnyTag(itemName, "Bad Filler", "Basic Filler", "Better Filler", "Amazing Filler", "Progression Skip Filler");
         }
 
         /// <summary>
@@ -271,6 +271,7 @@ namespace Narcopelago
             if (Data_Items.HasTag(itemName, "Basic Filler")) return 3;
             if (Data_Items.HasTag(itemName, "Better Filler")) return 2;
             if (Data_Items.HasTag(itemName, "Amazing Filler")) return 1;
+            if (Data_Items.HasTag(itemName, "Progression Skip Filler")) return 1;
             return 0;
         }
 

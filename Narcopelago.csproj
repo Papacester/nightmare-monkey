@@ -527,6 +527,7 @@
 		<Compile Include="NarcopelagoRealtor.cs" />
 		<Compile Include="NarcopelagoRecipeChecks.cs" />
 		<Compile Include="NarcopelagoSave.cs" />
+		<Compile Include="NarcopelagoSewer.cs" />
 		<Compile Include="NarcopelagoSuppliers.cs" />
 		<Compile Include="NarcopelagoTraps.cs" />
 		<Compile Include="NarcopelagoUI.cs" />

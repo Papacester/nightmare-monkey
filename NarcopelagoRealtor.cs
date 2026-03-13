@@ -392,6 +392,14 @@ namespace Narcopelago
         {
             try
             {
+                // Sewer Office has special conditions — handled by NarcopelagoSewer
+                if (string.Equals(propertyName, "Sewer Office", StringComparison.OrdinalIgnoreCase))
+                {
+                    MelonLogger.Msg($"[Realtor] Skipping Sewer Office — delegating to NarcopelagoSewer");
+                    NarcopelagoSewer.OnSewerOfficeItemReceived();
+                    return;
+                }
+
                 // Try to find the property in the game
                 Property property = FindPropertyByName(propertyName);
                 if (property != null)

@@ -84,6 +84,11 @@ namespace Narcopelago
         public static bool Randomize_suppliers { get; private set; } = false;
 
         /// <summary>
+        /// Randomize Sewer Key - when true, the sewer key from Jen Heard is an AP item
+        /// </summary>
+        public static bool Randomize_sewer_key { get; private set; } = false;
+
+        /// <summary>
         /// if Deathlink is enabled or not
         /// </summary>
         public static bool Deathlink { get; private set; } = false;
@@ -164,6 +169,7 @@ namespace Narcopelago
                 Cash_for_trash = GetInt(slotData, "cash_for_trash", 0);
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
+                Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
                 Deathlink = GetBool(slotData, "death_link", false);
 
                 // Bundle options
@@ -213,6 +219,7 @@ namespace Narcopelago
                 Cash_for_trash = GetInt(slotData, "cash_for_trash", 0);
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
+                Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
                 Deathlink = GetBool(slotData, "death_link", false);
 
                 // Bundle options
@@ -249,6 +256,7 @@ namespace Narcopelago
             Cash_for_trash = 0;
             Randomize_level_unlocks = false;
             Randomize_suppliers = false;
+            Randomize_sewer_key = false;
             Deathlink = false;
 
             // Bundle options
@@ -277,6 +285,7 @@ namespace Narcopelago
             MelonLogger.Msg($"  Cash_for_trash: {Cash_for_trash}");
             MelonLogger.Msg($"  Randomize_level_unlocks: {Randomize_level_unlocks}");
             MelonLogger.Msg($"  Randomize_suppliers: {Randomize_suppliers}");
+            MelonLogger.Msg($"  Randomize_sewer_key: {Randomize_sewer_key}");
             MelonLogger.Msg($"  DeathLink: {Deathlink}");
             MelonLogger.Msg($"  Number_of_xp_bundles: {Number_of_xp_bundles}");
             MelonLogger.Msg($"  Amount_of_xp_per_bundle_min: {Amount_of_xp_per_bundle_min}");

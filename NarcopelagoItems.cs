@@ -134,6 +134,19 @@ namespace Narcopelago
             {
                 HandleLevelUpReward(itemName);
             }
+            else if (IsSewerKeyItem(itemName))
+            {
+                // Sewer Key is idempotent for tracking, but claimable like a filler
+                NarcopelagoSewer.OnSewerKeyItemReceived();
+                if (!syncComplete)
+                {
+                    MelonLogger.Msg($"[Items] Skipping Sewer Key filler claim (save sync not complete yet)");
+                }
+                else
+                {
+                    HandleSewerKeyItem(itemName);
+                }
+            }
             else if (IsPropertyItem(itemName))
             {
                 HandlePropertyItem(itemName);
@@ -346,12 +359,37 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Checks if an item is the Sewer Key.
+        /// </summary>
+        private static bool IsSewerKeyItem(string itemName)
+        {
+            return string.Equals(itemName, "Sewer Key", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Handle receiving the Sewer Key item.
+        /// Notifies NarcopelagoSewer and adds it to the AP app as a claimable filler.
+        /// </summary>
+        private static void HandleSewerKeyItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing Sewer Key item: {itemName}");
+            NarcopelagoSewer.OnSewerKeyItemReceived();
+            NarcopelagoFillers.OnFillerItemReceived(itemName);
+        }
+
+        /// <summary>
         /// Handle receiving a property or business item.
         /// </summary>
         private static void HandlePropertyItem(string itemName)
         {
             MelonLogger.Msg($"[Items] Processing property item: {itemName}");
             NarcopelagoRealtor.OnPropertyItemReceived(itemName);
+
+            // If this is the Sewer Office, also notify NarcopelagoSewer
+            if (string.Equals(itemName, "Sewer Office", StringComparison.OrdinalIgnoreCase))
+            {
+                NarcopelagoSewer.OnSewerOfficeItemReceived();
+            }
         }
 
         /// <summary>
