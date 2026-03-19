@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Narcopelago
@@ -14,6 +15,71 @@ namespace Narcopelago
     {
         // Event that fires when Connect button is clicked (host, port, slotName, password)
         public static event Action<string, int, string, string> OnConnectClicked;
+
+        // Ordered list of input fields for Tab navigation (top to bottom, left to right)
+        private static InputField[] _tabOrder;
+
+        /// <summary>
+        /// Call from Core.OnUpdate() to handle Tab key cycling through input fields.
+        /// </summary>
+        public static void HandleTabNavigation()
+        {
+            if (_tabOrder == null || _tabOrder.Length == 0)
+                return;
+
+            // Check if any input field is currently focused
+            int currentIndex = -1;
+            for (int i = 0; i < _tabOrder.Length; i++)
+            {
+                if (_tabOrder[i] != null && _tabOrder[i].isFocused)
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            if (currentIndex == -1)
+                return;
+
+            // Handle Tab key - cycle to next field
+            if (!Input.GetKeyDown(KeyCode.Tab))
+                return;
+
+            int nextIndex = (currentIndex + 1) % _tabOrder.Length;
+            _tabOrder[nextIndex].ActivateInputField();
+            _tabOrder[nextIndex].Select();
+        }
+
+        /// <summary>
+        /// Triggers the connect action. Called when Enter is pressed in any input field
+        /// via onEndEdit, or when the Connect button is clicked.
+        /// </summary>
+        public static void TriggerConnect()
+        {
+            OnConnectClicked?.Invoke(
+                Schedule1PanelManager.Host,
+                Schedule1PanelManager.Port,
+                Schedule1PanelManager.SlotName,
+                Schedule1PanelManager.Password);
+
+            if (Schedule1PanelManager.StatusText != null)
+            {
+                Schedule1PanelManager.StatusText.text = "Connecting...";
+                Schedule1PanelManager.StatusText.color = Color.yellow;
+            }
+        }
+
+        /// <summary>
+        /// Callback for InputField.onEndEdit. Fires connect when Enter/Return caused the edit to end.
+        /// </summary>
+        private static void OnFieldEndEdit(string text)
+        {
+            // onEndEdit fires for Tab, clicks, etc. Only connect on Enter/Return.
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                TriggerConnect();
+            }
+        }
 
         // Call this to update the status text from connection result
         public static void SetConnectionStatus(bool success, string message)
@@ -368,28 +434,16 @@ namespace Narcopelago
             Schedule1PanelManager.SlotNameField = nameField;
             Schedule1PanelManager.PasswordField = passField;
 
-            button.onClick.AddListener((UnityAction)OnConnectButtonClicked);
+            // Set up Tab order: top to bottom, then left to right
+            _tabOrder = new InputField[] { nameField, passField, hostField, portField };
 
-            void OnConnectButtonClicked()
-            {
-                string host = hostField.text;
-                string portStr = portField.text;
-                string playerName = nameField.text;
-                string password = passField.text;
+            // Wire up Enter/Return key on all input fields via onEndEdit
+            nameField.onEndEdit.AddListener((UnityAction<string>)OnFieldEndEdit);
+            passField.onEndEdit.AddListener((UnityAction<string>)OnFieldEndEdit);
+            hostField.onEndEdit.AddListener((UnityAction<string>)OnFieldEndEdit);
+            portField.onEndEdit.AddListener((UnityAction<string>)OnFieldEndEdit);
 
-                int port = 38281; // default port
-                int.TryParse(portStr, out port);
-
-                // Show connecting status
-                if (Schedule1PanelManager.StatusText != null)
-                {
-                    Schedule1PanelManager.StatusText.text = "Connecting...";
-                    Schedule1PanelManager.StatusText.color = Color.yellow;
-                }
-        
-                // Invoke the event so subscribers can handle connection
-                OnConnectClicked?.Invoke(host, port, playerName, password);
-            }
+            button.onClick.AddListener((UnityAction)(() => TriggerConnect()));
 
 
             MelonLogger.Msg("Schedule1Panel Created!");

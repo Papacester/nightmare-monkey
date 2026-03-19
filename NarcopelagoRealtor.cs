@@ -707,9 +707,10 @@ namespace Narcopelago
 
     /// <summary>
     /// Harmony patch for DialogueHandler_EstateAgent.ShouldChoiceBeShown
-    /// Controls visibility of purchase options based on location check status and player funds.
-    /// Shows options for owned properties if their location check is not complete AND player has funds.
+    /// Controls visibility of purchase options based on location check status.
+    /// Shows options for owned properties if their location check is not complete.
     /// Hides options for properties whose location check is already complete.
+    /// Properties are shown regardless of player funds - the game handles the money check at purchase time.
     /// </summary>
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ShouldChoiceBeShown")]
     public class DialogueHandler_EstateAgent_ShouldChoiceBeShown_Patch
@@ -721,105 +722,54 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Prefix to control visibility. We need to handle:
-        /// 1. Force SHOW owned properties if location check not complete AND player has enough money
+        /// Postfix to control visibility. We need to handle:
+        /// 1. Force SHOW owned properties if location check not complete (override game hiding them)
         /// 2. Force HIDE any properties if location check IS complete
-        /// 3. Force HIDE if player doesn't have enough money
+        /// 3. Let the game handle everything else (including price display formatting)
         /// </summary>
-        static bool Prefix(string choiceLabel, ref bool __result)
+        static void Postfix(string choiceLabel, ref bool __result)
         {
             try
             {
                 // Check if this is a property
                 var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
-                
+
                 if (property != null)
                 {
+                    // Only apply our logic if this property has an AP location.
+                    // Properties with no AP location (e.g. Hyland Manor) are left entirely to the game.
+                    string locationName = $"Realtor Purchase, {property.PropertyName}";
+                    if (Data_Locations.GetLocationId(locationName) <= 0)
+                        return;
+
                     bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(property.PropertyName);
-                    
-                    if (locationComplete)
-                    {
-                        // Location complete - hide the option
-                        __result = false;
-                        return false; // Skip original
-                    }
-                    
-                    // Location not complete - check if player has enough money
-                    if (!HasEnoughFunds(property.Price))
-                    {
-                        __result = false;
-                        return false; // Skip original - not enough funds
-                    }
-                    
-                    // Location not complete and has funds - show the option (even if owned)
-                    __result = true;
-                    return false; // Skip original
+                    __result = !locationComplete;
+                    return;
                 }
 
                 // Check if this is a business
                 var business = Business.Businesses.Find(
                     new Func<Business, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
-                
+
                 if (business != null)
                 {
+                    // Only apply our logic if this business has an AP location.
+                    string locationName = $"Realtor Purchase, {business.PropertyName}";
+                    if (Data_Locations.GetLocationId(locationName) <= 0)
+                        return;
+
                     bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName);
-                    
-                    if (locationComplete)
-                    {
-                        // Location complete - hide the option
-                        __result = false;
-                        return false; // Skip original
-                    }
-                    
-                    // Location not complete - check if player has enough money
-                    if (!HasEnoughFunds(business.Price))
-                    {
-                        __result = false;
-                        return false; // Skip original - not enough funds
-                    }
-                    
-                    // Location not complete and has funds - show the option (even if owned)
-                    __result = true;
-                    return false; // Skip original
+                    __result = !locationComplete;
+                    return;
                 }
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[PATCH] Error in ShouldChoiceBeShown Prefix: {ex.Message}");
+                MelonLogger.Error($"[PATCH] Error in ShouldChoiceBeShown Postfix: {ex.Message}");
             }
 
-            // Not a property/business we recognize - let original handle it
-            return true;
-        }
-
-        /// <summary>
-        /// Checks if the player has enough funds in their online balance.
-        /// </summary>
-        private static bool HasEnoughFunds(float price)
-        {
-            try
-            {
-                if (!Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.InstanceExists)
-                {
-                    return false;
-                }
-
-                var moneyManager = Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance;
-                if (moneyManager == null)
-                {
-                    return false;
-                }
-
-                // Check online balance (bank balance)
-                float balance = moneyManager.onlineBalance;
-                return balance >= price;
-            }
-            catch (Exception ex)
-            {
-                MelonLogger.Error($"[PATCH] Error checking funds: {ex.Message}");
-                return false;
-            }
+            // Not a property/business we recognize - keep original result
         }
     }
 }

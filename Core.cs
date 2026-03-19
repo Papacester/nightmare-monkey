@@ -15,7 +15,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.3.0", "Papacestor, MacH8s", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.4.0", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -105,6 +105,9 @@ namespace Narcopelago
                 
                 // Debug: message stress test keybind ('-' to toggle)
                 // NarcopelagoMessageStressTest.Update();
+            
+                // Handle Tab key navigation for main menu input fields
+                NarcopelagoUI.HandleTabNavigation();
             }
 
             public override void OnGUI()
@@ -201,8 +204,22 @@ namespace Narcopelago
                     LoggerInstance.Warning($"items.json not found at: {itemsPath}");
                 }
 
+                // Load regions.json
+                string regionsPath = Path.Combine(DataPath, "regions.json");
+                if (File.Exists(regionsPath))
+                {
+                    string regionsJson = File.ReadAllText(regionsPath);
+                    Data_Regions.LoadFromJson(regionsJson);
+                    LoggerInstance.Msg($"Loaded {Data_Regions.Regions?.Count ?? 0} regions");
+                }
+                else
+                {
+                    LoggerInstance.Warning($"regions.json not found at: {regionsPath}");
+                }
+
                 DataLoaded = Data_Locations.Locations != null && 
-                             Data_Items.Items != null;
+                             Data_Items.Items != null &&
+                             Data_Regions.Regions != null;
 
                 if (DataLoaded)
                 {
