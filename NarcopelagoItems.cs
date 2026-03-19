@@ -334,6 +334,10 @@ namespace Narcopelago
         {
             MelonLogger.Msg($"[Items] Processing level up reward: {itemName}");
             NarcopelagoLevels.OnUnlockItemReceived(itemName);
+
+            // Level unlock items can change which customers are in logic,
+            // so queue a POI update to refresh colors
+            NarcopelagoCustomers.QueueDelayedPOIUpdate(10);
         }
 
         /// <summary>

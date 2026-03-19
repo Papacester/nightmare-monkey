@@ -505,6 +505,7 @@
 		<Compile Include="Core.cs" />
 		<Compile Include="Data_Items.cs" />
 		<Compile Include="Data_Locations.cs" />
+		<Compile Include="Data_Regions.cs" />
 		<Compile Include="NarcopelagoAPContacts.cs" />
 		<Compile Include="NarcopelagoBundles.cs" />
 		<Compile Include="NarcopelagoCartelInfluence.cs" />

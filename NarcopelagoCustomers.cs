@@ -10,6 +10,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Narcopelago
 {
@@ -674,11 +675,13 @@ namespace Narcopelago
             /// <summary>
                 /// Updates all customer POIs based on current sample eligibility.
                 /// Shows POIs for customers who can be sampled, hides for those who cannot.
+                /// Colors POIs red when the customer is out of logic (randomize_level_unlocks requirements not met).
                 /// </summary>
                 public static void UpdateCustomerPOIs()
                 {
                     int shown = 0;
                     int hidden = 0;
+                    int outOfLogic = 0;
                     int processed = 0;
 
                     // Process locked customers
@@ -693,8 +696,17 @@ namespace Narcopelago
                         bool canBeSampled = CanCustomerBeSampled(customerName);
                         customer.SetPotentialCustomerPoIEnabled(canBeSampled);
 
-                        if (canBeSampled) shown++;
-                        else hidden++;
+                        if (canBeSampled)
+                        {
+                            shown++;
+                            bool inLogic = Data_Regions.IsCustomerInLevelUnlockLogic(customerName);
+                            SetPOIColor(customer.potentialCustomerPoI, inLogic);
+                            if (!inLogic) outOfLogic++;
+                        }
+                        else
+                        {
+                            hidden++;
+                        }
                         processed++;
                     }
 
@@ -710,8 +722,17 @@ namespace Narcopelago
                         bool canBeSampled = CanCustomerBeSampled(customerName);
                         customer.SetPotentialCustomerPoIEnabled(canBeSampled);
 
-                        if (canBeSampled) shown++;
-                        else hidden++;
+                        if (canBeSampled)
+                        {
+                            shown++;
+                            bool inLogic = Data_Regions.IsCustomerInLevelUnlockLogic(customerName);
+                            SetPOIColor(customer.potentialCustomerPoI, inLogic);
+                            if (!inLogic) outOfLogic++;
+                        }
+                        else
+                        {
+                            hidden++;
+                        }
                         processed++;
                     }
 
@@ -721,7 +742,129 @@ namespace Narcopelago
                         return;
                     }
 
-                    MelonLogger.Msg($"[Customers] POI update: {shown} shown, {hidden} hidden");
+                    MelonLogger.Msg($"[Customers] POI update: {shown} shown ({outOfLogic} out of logic), {hidden} hidden");
+                }
+
+                /// <summary>
+                /// Whether we've dumped the POI hierarchy for debugging (one-time).
+                /// </summary>
+                private static bool _poiHierarchyDumped = false;
+
+                /// <summary>
+                /// Sets the color of a customer POI's circle/radius based on whether the customer is in logic.
+                /// Targets the circle Image around the customer face, not the face itself.
+                /// In logic = default purple, Out of logic = red.
+                /// </summary>
+                public static void SetPOIColor(NPCPoI poi, bool inLogic)
+                {
+                    if (poi == null) return;
+
+                    try
+                    {
+                        Color color = inLogic
+                            ? new Color(0.788f, 0.514f, 0.924f, 0.3f) // Default purple
+                            : new Color(1f, 0.2f, 0.2f, 0.15f);        // Red for out of logic
+
+                        var ui = poi.UI;
+                        if (ui == null) return;
+
+                        // One-time hierarchy dump for debugging
+                        if (!_poiHierarchyDumped)
+                        {
+                            _poiHierarchyDumped = true;
+                            DumpPOIHierarchy(poi);
+                        }
+
+                        // The POI UI hierarchy has a circle/ring background Image
+                        // and smaller square border Images near the face. We want only the circle.
+                        // Strategy: find the LARGEST Image (by rect area) outside IconContainer.
+                        // The circle is the biggest visual element wrapping the customer portrait.
+                        var iconContainer = poi.IconContainer;
+
+                        var allImages = ui.GetComponentsInChildren<Image>(true);
+                        if (allImages != null)
+                        {
+                            Image largestImage = null;
+                            float largestArea = 0f;
+
+                            for (int i = 0; i < allImages.Count; i++)
+                            {
+                                var img = allImages[i];
+                                if (img == null) continue;
+
+                                // Skip images inside the IconContainer (face and its frames)
+                                if (iconContainer != null && img.transform.IsChildOf(iconContainer))
+                                    continue;
+
+                                var rt = img.GetComponent<RectTransform>();
+                                if (rt == null) continue;
+
+                                float area = rt.rect.width * rt.rect.height;
+                                if (area > largestArea)
+                                {
+                                    largestArea = area;
+                                    largestImage = img;
+                                }
+                            }
+
+                            if (largestImage != null)
+                            {
+                                largestImage.color = color;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MelonLogger.Error($"[Customers] Error setting POI color: {ex.Message}");
+                    }
+                }
+
+                /// <summary>
+                /// Dumps the POI UI hierarchy to log for debugging (called once).
+                /// </summary>
+                private static void DumpPOIHierarchy(NPCPoI poi)
+                {
+                    try
+                    {
+                        var ui = poi.UI;
+                        if (ui == null) { MelonLogger.Msg("[POI Debug] UI is null"); return; }
+
+                        MelonLogger.Msg($"[POI Debug] === POI Hierarchy for '{poi.MainText}' ===");
+                        DumpTransform(ui, 0);
+                        MelonLogger.Msg($"[POI Debug] IconContainer name: {poi.IconContainer?.name ?? "null"}");
+                        MelonLogger.Msg("[POI Debug] === End ===");
+                    }
+                    catch (Exception ex)
+                    {
+                        MelonLogger.Error($"[POI Debug] Error dumping hierarchy: {ex.Message}");
+                    }
+                }
+
+                private static void DumpTransform(Transform t, int depth)
+                {
+                    string indent = new string(' ', depth * 2);
+                    var components = t.GetComponents<Component>();
+                    string compNames = "";
+                    if (components != null)
+                    {
+                        var names = new List<string>();
+                        for (int i = 0; i < components.Count; i++)
+                        {
+                            if (components[i] != null)
+                                names.Add(components[i].GetIl2CppType().Name);
+                        }
+                        compNames = string.Join(", ", names);
+                    }
+
+                    var img = t.GetComponent<Image>();
+                    string colorInfo = img != null ? $" color=({img.color.r:F2},{img.color.g:F2},{img.color.b:F2},{img.color.a:F2})" : "";
+
+                    MelonLogger.Msg($"[POI Debug] {indent}{t.name} [{compNames}]{colorInfo}");
+
+                    for (int i = 0; i < t.childCount; i++)
+                    {
+                        DumpTransform(t.GetChild(i), depth + 1);
+                    }
                 }
             }
 
@@ -1182,6 +1325,7 @@ namespace Narcopelago
 
                         /// <summary>
                         /// Prefix that replaces the game's POI logic with Archipelago's sample eligibility check.
+                        /// Also colors the POI red when the customer is out of logic.
                         /// </summary>
                         static bool Prefix(Customer __instance)
                         {
@@ -1205,6 +1349,13 @@ namespace Narcopelago
                                 // Set POI visibility based on whether they can be sampled
                                 __instance.SetPotentialCustomerPoIEnabled(canBeSampled);
 
+                                // Set POI color based on logic state
+                                if (canBeSampled)
+                                {
+                                    bool inLogic = Data_Regions.IsCustomerInLevelUnlockLogic(customerName);
+                                    NarcopelagoCustomers.SetPOIColor(__instance.potentialCustomerPoI, inLogic);
+                                }
+
                                 return false; // Skip original method
                             }
                             catch (Exception ex)
@@ -1215,4 +1366,3 @@ namespace Narcopelago
                         }
                     }
                 }
-
