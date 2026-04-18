@@ -4,6 +4,7 @@ using Archipelago.MultiClient.Net.Packets;
 using HarmonyLib;
 using Il2CppScheduleOne.PlayerScripts;
 using Il2CppScheduleOne.PlayerScripts.Health;
+using Il2CppScheduleOne.UI;
 using MelonLoader;
 using Newtonsoft.Json.Linq;
 using System;
@@ -285,7 +286,22 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Random instance for selecting death options.
+        /// </summary>
+        private static readonly Random _random = new Random();
+
+        /// <summary>
+        /// The trap types that can be chosen for the "random_trap" DeathLink option.
+        /// Matches: Heat, Slippery, Trash, Pan, TimeScale, Sleep
+        /// </summary>
+        private static readonly string[] RandomTrapPool = new[]
+        {
+            "Heat Trap", "Slippery Trap", "Trash Trap", "Pan Trap", "TimeScale Trap", "Sleep Trap"
+        };
+
+        /// <summary>
         /// Processes pending deaths on the main thread.
+        /// Randomly selects from the enabled DeathLink options for each received death.
         /// Call this from OnUpdate.
         /// </summary>
         public static void ProcessMainThreadQueue()
@@ -299,12 +315,49 @@ namespace Narcopelago
             {
                 try
                 {
-                    ArrestPlayer(death.source, death.cause);
+                    ExecuteDeathLinkConsequence(death.source, death.cause);
                 }
                 catch (Exception ex)
                 {
-                    MelonLogger.Error($"[DeathLink] Error arresting player: {ex.Message}");
+                    MelonLogger.Error($"[DeathLink] Error processing death consequence: {ex.Message}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Picks a random DeathLink option and executes it.
+        /// </summary>
+        private static void ExecuteDeathLinkConsequence(string source, string cause)
+        {
+            var options = NarcopelagoOptions.DeathLink_options;
+            if (options == null || options.Count == 0)
+            {
+                MelonLogger.Warning("[DeathLink] No DeathLink options configured - defaulting to arrested");
+                ArrestPlayer(source, cause);
+                return;
+            }
+
+            string chosen = options[_random.Next(options.Count)];
+            MelonLogger.Msg($"[DeathLink] Chose consequence '{chosen}' from {options.Count} option(s) (source: {source})");
+
+            switch (chosen.ToLowerInvariant())
+            {
+                case "sleep_trap":
+                    ExecuteSleepTrap(source, cause);
+                    break;
+                case "arrested":
+                    ArrestPlayer(source, cause);
+                    break;
+                case "random_trap":
+                    ExecuteRandomTrap(source, cause);
+                    break;
+                case "death":
+                    KillPlayer(source, cause);
+                    break;
+                default:
+                    MelonLogger.Warning($"[DeathLink] Unknown option '{chosen}' - defaulting to arrested");
+                    ArrestPlayer(source, cause);
+                    break;
             }
         }
 
@@ -313,50 +366,87 @@ namespace Narcopelago
         /// </summary>
         private static void ArrestPlayer(string source, string cause)
         {
+            var localPlayer = Player.Local;
+            if (localPlayer == null)
+            {
+                MelonLogger.Warning("[DeathLink] Cannot arrest - no local player");
+                return;
+            }
+
+            if (localPlayer.IsArrested)
+            {
+                MelonLogger.Msg("[DeathLink] Player is already arrested");
+                return;
+            }
+
+            if (!localPlayer.Health.IsAlive)
+            {
+                MelonLogger.Msg("[DeathLink] Player is already dead");
+                return;
+            }
+
+            MelonLogger.Msg($"[DeathLink] Arresting player because {source} {cause}");
+            _isProcessingReceivedDeath = true;
             try
             {
-                var localPlayer = Player.Local;
-                if (localPlayer == null)
-                {
-                    MelonLogger.Warning("[DeathLink] Cannot arrest - no local player");
-                    return;
-                }
-
-                // Check if player is already arrested or dead
-                if (localPlayer.IsArrested)
-                {
-                    MelonLogger.Msg("[DeathLink] Player is already arrested");
-                    return;
-                }
-
-                if (!localPlayer.Health.IsAlive)
-                {
-                    MelonLogger.Msg("[DeathLink] Player is already dead");
-                    return;
-                }
-
-                MelonLogger.Msg($"[DeathLink] Arresting player because {source} {cause}");
-
-                // Set flag to prevent sending a death back
-                _isProcessingReceivedDeath = true;
-
-                try
-                {
-                    // Call the arrest method
-                    // Using the RPC method that handles both server and client
-                    localPlayer.Arrest_Server();
-                }
-                finally
-                {
-                    // Reset the flag after a short delay (to ensure the event is processed)
-                    _isProcessingReceivedDeath = false;
-                }
+                localPlayer.Arrest_Server();
             }
-            catch (Exception ex)
+            finally
             {
                 _isProcessingReceivedDeath = false;
-                MelonLogger.Error($"[DeathLink] Error in ArrestPlayer: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Kills the local player in response to a DeathLink.
+        /// Calls SendDie() which triggers the game's built-in death flow.
+        /// The DeathScreen_CanRespawn_Patch ensures the Respawn button is always
+        /// available, which uses the game's multiplayer hospital respawn logic.
+        /// </summary>
+        private static void KillPlayer(string source, string cause)
+        {
+            var localPlayer = Player.Local;
+            if (localPlayer == null)
+            {
+                MelonLogger.Warning("[DeathLink] Cannot kill - no local player");
+                return;
+            }
+
+            if (!localPlayer.Health.IsAlive)
+            {
+                MelonLogger.Msg("[DeathLink] Player is already dead");
+                return;
+            }
+
+            MelonLogger.Msg($"[DeathLink] Killing player because {source} {cause}");
+            _isProcessingReceivedDeath = true;
+            try
+            {
+                localPlayer.Health.SendDie();
+            }
+            finally
+            {
+                _isProcessingReceivedDeath = false;
+            }
+        }
+
+        /// <summary>
+        /// Applies a random trap (Heat, Slippery, Trash, Pan, TimeScale, Sleep) in response to a DeathLink.
+        /// </summary>
+        private static void ExecuteRandomTrap(string source, string cause)
+        {
+            string trapName = RandomTrapPool[_random.Next(RandomTrapPool.Length)];
+            MelonLogger.Msg($"[DeathLink] Random trap selected: '{trapName}' because {source} {cause}");
+            NarcopelagoTraps.OnTrapItemReceived(trapName);
+        }
+
+        /// <summary>
+        /// Applies the sleep trap (ends day) in response to a DeathLink.
+        /// </summary>
+        private static void ExecuteSleepTrap(string source, string cause)
+        {
+            MelonLogger.Msg($"[DeathLink] Sleep trap (end day) because {source} {cause}");
+            NarcopelagoTraps.OnTrapItemReceived("Sleep Trap");
         }
 
         /// <summary>
@@ -374,7 +464,8 @@ namespace Narcopelago
     }
 
     /// <summary>
-    /// Harmony patch for PlayerHealth.Die to detect player death.
+    /// Harmony patch for PlayerHealth.Die to detect player death and trigger DeathLink.
+    /// The actual hospital redirect is handled by DeathScreen_Open_Patch.
     /// </summary>
     [HarmonyPatch(typeof(PlayerHealth), "RpcLogic___Die_2166136261")]
     public class PlayerHealth_Die_Patch
@@ -389,7 +480,6 @@ namespace Narcopelago
         {
             try
             {
-                // Only trigger for the local player
                 if (__instance.Player != null && __instance.Player == Player.Local)
                 {
                     MelonLogger.Msg("[PATCH] Local player died - triggering DeathLink");
@@ -399,6 +489,77 @@ namespace Narcopelago
             catch (Exception ex)
             {
                 MelonLogger.Error($"[PATCH] Error in PlayerHealth.Die Postfix: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Harmony patch for DeathScreen.CanRespawn to always return true.
+    /// This ensures the respawn button is always shown instead of the load save button,
+    /// which uses the game's multiplayer hospital respawn logic.
+    /// </summary>
+    [HarmonyPatch(typeof(DeathScreen), nameof(DeathScreen.CanRespawn))]
+    public class DeathScreen_CanRespawn_Patch
+    {
+        static bool Prepare()
+        {
+            MelonLogger.Msg("[PATCH] DeathScreen.CanRespawn patch is being prepared");
+            return true;
+        }
+
+        static bool Prefix(ref bool __result)
+        {
+            // Always allow respawn - this shows the respawn button instead of load save
+            __result = true;
+            MelonLogger.Msg("[PATCH] CanRespawn called - returning true to enable respawn button");
+            return false; // Skip original method
+        }
+    }
+
+    /// <summary>
+    /// Harmony patch for DeathScreen.Open to show the respawn button and hide load save button.
+    /// The death screen UI is shown but configured for multiplayer-style respawn.
+    /// </summary>
+    [HarmonyPatch(typeof(DeathScreen), nameof(DeathScreen.Open))]
+    public class DeathScreen_Open_Patch
+    {
+        static bool Prepare()
+        {
+            MelonLogger.Msg("[PATCH] DeathScreen.Open patch is being prepared");
+            return true;
+        }
+
+        static void Postfix(DeathScreen __instance)
+        {
+            try
+            {
+                MelonLogger.Msg("[PATCH] DeathScreen.Open postfix - ensuring respawn button is visible and load save is hidden");
+
+                // Show the respawn button
+                if (__instance.respawnButton != null)
+                {
+                    __instance.respawnButton.gameObject.SetActive(true);
+                    MelonLogger.Msg("[PATCH] Respawn button activated");
+                }
+                else
+                {
+                    MelonLogger.Warning("[PATCH] respawnButton is null");
+                }
+
+                // Hide the load save button
+                if (__instance.loadSaveButton != null)
+                {
+                    __instance.loadSaveButton.gameObject.SetActive(false);
+                    MelonLogger.Msg("[PATCH] Load save button hidden");
+                }
+                else
+                {
+                    MelonLogger.Warning("[PATCH] loadSaveButton is null");
+                }
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[PATCH] Error in DeathScreen.Open Postfix: {ex.Message}");
             }
         }
     }
@@ -419,7 +580,6 @@ namespace Narcopelago
         {
             try
             {
-                // Only trigger for the local player
                 if (__instance == Player.Local)
                 {
                     MelonLogger.Msg("[PATCH] Local player arrested - triggering DeathLink");
