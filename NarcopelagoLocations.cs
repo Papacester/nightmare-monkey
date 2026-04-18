@@ -214,6 +214,33 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Scouts multiple locations as hints, announcing them to the relevant players.
+        /// Uses createAsHint=true which creates free hints on the AP server.
+        /// </summary>
+        /// <param name="locationIds">The location IDs to scout as hints.</param>
+        public static async Task ScoutLocationsAsHintsAsync(params long[] locationIds)
+        {
+            if (!IsAvailable)
+            {
+                MelonLogger.Warning("[Locations] Cannot scout locations - not connected to Archipelago");
+                return;
+            }
+
+            if (locationIds == null || locationIds.Length == 0)
+                return;
+
+            try
+            {
+                await Locations.ScoutLocationsAsync(true, locationIds);
+                MelonLogger.Msg($"[Locations] Scouted {locationIds.Length} locations as hints");
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Error($"[Locations] Failed to scout locations as hints: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Gets the name of a location by its ID.
         /// </summary>
         /// <param name="locationId">The location ID.</param>

@@ -39,6 +39,17 @@ namespace Narcopelago
         private static ConcurrentQueue<string> _pendingUnlocks = new ConcurrentQueue<string>();
 
         /// <summary>
+        /// Tracks which owned properties we temporarily added back to UnownedProperties
+        /// so the game's dialogue system handles them normally.
+        /// </summary>
+        private static HashSet<string> _spoofedUnownedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Tracks which owned businesses we temporarily added back to UnownedBusinesses.
+        /// </summary>
+        private static HashSet<string> _spoofedUnownedBusinesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Tracks if we're in a game scene.
         /// </summary>
         private static bool _inGameScene = false;
@@ -52,6 +63,11 @@ namespace Narcopelago
         /// Counter for delayed sync.
         /// </summary>
         private static int _syncDelayFrames = 0;
+
+        /// <summary>
+        /// Tracks whether realtor location hints have been scouted this session.
+        /// </summary>
+        private static bool _hintsScouted = false;
 
         #endregion
 
@@ -131,6 +147,15 @@ namespace Narcopelago
 
             // Mark as purchased
             _purchaseLocationChecked.Add(propertyName);
+
+            // Check if this property even exists as an AP location - if not, allow it through
+            string locationName = $"Realtor Purchase, {propertyName}";
+            int locationId = Data_Locations.GetLocationId(locationName);
+            if (locationId <= 0)
+            {
+                MelonLogger.Msg($"[Realtor] Allowing unlock for '{propertyName}' - not an Archipelago location");
+                return true;
+            }
 
             // Check if we should block the unlock based on randomization settings
             if (isBusiness && NarcopelagoOptions.Randomize_business_properties)
@@ -247,6 +272,7 @@ namespace Narcopelago
             _unlockedViaAP.Clear();
             _inGameScene = false;
             _syncPending = false;
+            _hintsScouted = false;
             
             while (_pendingUnlocks.TryDequeue(out _)) { }
             
@@ -465,13 +491,133 @@ namespace Narcopelago
             foreach (var biz in Business.Businesses)
             {
                 if (biz == null) continue;
-                
+
                 if (string.Equals(biz.PropertyName, propertyName, StringComparison.OrdinalIgnoreCase))
                 {
                     return biz;
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Scouts all realtor purchase locations as hints on the AP server.
+        /// Called once per session when the player first talks to the realtor.
+        /// </summary>
+        public static void ScoutRealtorHints()
+        {
+            if (_hintsScouted) return;
+            _hintsScouted = true;
+
+            var locationIds = new System.Collections.Generic.List<long>();
+
+            // Gather Drug Making Property locations if randomization is enabled
+            if (NarcopelagoOptions.Randomize_drug_making_properties)
+            {
+                foreach (var locName in Data_Locations.GetLocationsByTag("Drug Making Property"))
+                {
+                    int id = Data_Locations.GetLocationId(locName);
+                    if (id > 0 && !NarcopelagoLocations.IsLocationChecked(id))
+                        locationIds.Add(id);
+                }
+            }
+
+            // Gather Business Property locations if randomization is enabled
+            if (NarcopelagoOptions.Randomize_business_properties)
+            {
+                foreach (var locName in Data_Locations.GetLocationsByTag("Business Property"))
+                {
+                    int id = Data_Locations.GetLocationId(locName);
+                    if (id > 0 && !NarcopelagoLocations.IsLocationChecked(id))
+                        locationIds.Add(id);
+                }
+            }
+
+            if (locationIds.Count > 0)
+            {
+                MelonLogger.Msg($"[Realtor] Scouting {locationIds.Count} realtor locations as hints");
+                _ = NarcopelagoLocations.ScoutLocationsAsHintsAsync(locationIds.ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Ensures an owned property is temporarily in the UnownedProperties list so
+        /// the game's entire dialogue flow (price display, fund checks, etc.) works.
+        /// </summary>
+        public static void EnsurePropertyInUnownedList(Property property)
+        {
+            if (property == null || !property.IsOwned) return;
+            if (_spoofedUnownedProperties.Contains(property.PropertyName)) return;
+
+            // Check it's not already in the list
+            var unowned = Property.UnownedProperties;
+            for (int i = 0; i < unowned.Count; i++)
+            {
+                if (unowned[i] != null && string.Equals(unowned[i].PropertyName, property.PropertyName, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+
+            unowned.Add(property);
+            _spoofedUnownedProperties.Add(property.PropertyName);
+            MelonLogger.Msg($"[Realtor] Temporarily added '{property.PropertyName}' to UnownedProperties for dialogue");
+        }
+
+        /// <summary>
+        /// Ensures an owned business is temporarily in the UnownedBusinesses list.
+        /// </summary>
+        public static void EnsureBusinessInUnownedList(Business business)
+        {
+            if (business == null || !business.IsOwned) return;
+            if (_spoofedUnownedBusinesses.Contains(business.PropertyName)) return;
+
+            var unowned = Business.UnownedBusinesses;
+            for (int i = 0; i < unowned.Count; i++)
+            {
+                if (unowned[i] != null && string.Equals(unowned[i].PropertyName, business.PropertyName, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+
+            unowned.Add(business);
+            _spoofedUnownedBusinesses.Add(business.PropertyName);
+            MelonLogger.Msg($"[Realtor] Temporarily added '{business.PropertyName}' to UnownedBusinesses for dialogue");
+        }
+
+        /// <summary>
+        /// Removes a property from UnownedProperties if we spoofed it in.
+        /// </summary>
+        public static void RemovePropertyFromUnownedList(string propertyName)
+        {
+            if (!_spoofedUnownedProperties.Remove(propertyName)) return;
+
+            var unowned = Property.UnownedProperties;
+            for (int i = unowned.Count - 1; i >= 0; i--)
+            {
+                if (unowned[i] != null && string.Equals(unowned[i].PropertyName, propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    unowned.RemoveAt(i);
+                    MelonLogger.Msg($"[Realtor] Removed '{propertyName}' from UnownedProperties after purchase");
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a business from UnownedBusinesses if we spoofed it in.
+        /// </summary>
+        public static void RemoveBusinessFromUnownedList(string businessName)
+        {
+            if (!_spoofedUnownedBusinesses.Remove(businessName)) return;
+
+            var unowned = Business.UnownedBusinesses;
+            for (int i = unowned.Count - 1; i >= 0; i--)
+            {
+                if (unowned[i] != null && string.Equals(unowned[i].PropertyName, businessName, StringComparison.OrdinalIgnoreCase))
+                {
+                    unowned.RemoveAt(i);
+                    MelonLogger.Msg($"[Realtor] Removed '{businessName}' from UnownedBusinesses after purchase");
+                    return;
+                }
+            }
         }
 
         #endregion
@@ -526,15 +672,25 @@ namespace Narcopelago
 
                     if (isAlreadyOwned)
                     {
-                        // Property already owned via AP - still charge the player and send the location check
+                        // Validate funds before charging
+                        float balance = Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.onlineBalance;
+                        if (balance < _pendingProperty.Price)
+                        {
+                            MelonLogger.Msg($"[PATCH] CONFIRM_BUY blocked for '{propertyName}' - insufficient funds (have: {balance}, need: {_pendingProperty.Price})");
+                            _pendingProperty = null;
+                            return false;
+                        }
+
+                        // Property already owned via AP - charge the player and send the location check
                         Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
                             propertyName + " purchase", 
                             0f - _pendingProperty.Price, 
                             1f, 
                             string.Empty);
-                        
+
                         NarcopelagoRealtor.SendPurchaseLocationCheckPublic(propertyName);
                         NarcopelagoRealtor.MarkAsPurchased(propertyName);
+                        NarcopelagoRealtor.RemovePropertyFromUnownedList(propertyName);
                         MelonLogger.Msg($"[PATCH] Property '{propertyName}' already owned - payment processed, location check sent");
                         _pendingProperty = null;
                         return false; // Skip original - don't try to buy what we already own
@@ -567,15 +723,25 @@ namespace Narcopelago
 
                     if (isAlreadyOwned)
                     {
-                        // Business already owned via AP - still charge the player and send the location check
+                        // Validate funds before charging
+                        float balance = Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.onlineBalance;
+                        if (balance < _pendingBusiness.Price)
+                        {
+                            MelonLogger.Msg($"[PATCH] CONFIRM_BUY_BUSINESS blocked for '{businessName}' - insufficient funds (have: {balance}, need: {_pendingBusiness.Price})");
+                            _pendingBusiness = null;
+                            return false;
+                        }
+
+                        // Business already owned via AP - charge the player and send the location check
                         Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
                             businessName + " purchase", 
                             0f - _pendingBusiness.Price, 
                             1f, 
                             string.Empty);
-                        
+
                         NarcopelagoRealtor.SendPurchaseLocationCheckPublic(businessName);
                         NarcopelagoRealtor.MarkAsPurchased(businessName);
+                        NarcopelagoRealtor.RemoveBusinessFromUnownedList(businessName);
                         MelonLogger.Msg($"[PATCH] Business '{businessName}' already owned - payment processed, location check sent");
                         _pendingBusiness = null;
                         return false; // Skip original - don't try to buy what we already own
@@ -612,8 +778,8 @@ namespace Narcopelago
     /// <summary>
     /// Harmony patch for DialogueHandler_EstateAgent.ChoiceCallback
     /// Captures the selected property/business before purchase confirmation.
-    /// For already-owned properties (from AP), handles the purchase directly here
-    /// since the game won't show the normal CONFIRM_BUY flow.
+    /// The game's own code now finds owned AP properties in UnownedProperties/UnownedBusinesses
+    /// (added there by ShouldChoiceBeShown), so we just need to track the pending selection.
     /// </summary>
     [HarmonyPatch(typeof(DialogueHandler_EstateAgent), "ChoiceCallback")]
     public class DialogueHandler_EstateAgent_ChoiceCallback_Patch
@@ -629,71 +795,22 @@ namespace Narcopelago
             try
             {
                 // IMPORTANT: Check businesses FIRST since Business extends Property
-                // Search in ALL businesses (not just unowned) because AP item may have already unlocked it
-                
-                // Check if this is a business selection
                 var business = Business.Businesses.Find(
                     new Func<Business, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
-                
+
                 if (business != null)
                 {
                     MelonLogger.Msg($"[PATCH] Selected business: {business.PropertyName} (Owned: {business.IsOwned})");
-                    
-                    // If already owned, handle the purchase directly here
-                    // The game won't show CONFIRM_BUY for owned properties
-                    if (business.IsOwned && !NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName))
-                    {
-                        // Charge the player
-                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
-                            business.PropertyName + " purchase", 
-                            0f - business.Price, 
-                            1f, 
-                            string.Empty);
-                        
-                        // Send location check
-                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(business.PropertyName);
-                        NarcopelagoRealtor.MarkAsPurchased(business.PropertyName);
-                        MelonLogger.Msg($"[PATCH] Business '{business.PropertyName}' already owned - payment processed, location check sent");
-                        
-                        // Close the dialogue since we handled it
-                        __instance.EndDialogue();
-                        return;
-                    }
-                    
                     DialogueHandler_EstateAgent_DialogueCallback_Patch.SetPendingBusiness(business);
                     return;
                 }
 
-                // Check if this is a property selection (only if not a business)
-                // Search in ALL properties (not just unowned) because AP item may have already unlocked it
                 var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
-                
+
                 if (property != null)
                 {
                     MelonLogger.Msg($"[PATCH] Selected property: {property.PropertyName} (Owned: {property.IsOwned})");
-                    
-                    // If already owned, handle the purchase directly here
-                    // The game won't show CONFIRM_BUY for owned properties
-                    if (property.IsOwned && !NarcopelagoRealtor.HasCompletedPurchaseLocation(property.PropertyName))
-                    {
-                        // Charge the player
-                        Il2CppScheduleOne.DevUtilities.NetworkSingleton<Il2CppScheduleOne.Money.MoneyManager>.Instance.CreateOnlineTransaction(
-                            property.PropertyName + " purchase", 
-                            0f - property.Price, 
-                            1f, 
-                            string.Empty);
-                        
-                        // Send location check
-                        NarcopelagoRealtor.SendPurchaseLocationCheckPublic(property.PropertyName);
-                        NarcopelagoRealtor.MarkAsPurchased(property.PropertyName);
-                        MelonLogger.Msg($"[PATCH] Property '{property.PropertyName}' already owned - payment processed, location check sent");
-                        
-                        // Close the dialogue since we handled it
-                        __instance.EndDialogue();
-                        return;
-                    }
-                    
                     DialogueHandler_EstateAgent_DialogueCallback_Patch.SetPendingProperty(property);
                     return;
                 }
@@ -725,26 +842,46 @@ namespace Narcopelago
         /// Postfix to control visibility. We need to handle:
         /// 1. Force SHOW owned properties if location check not complete (override game hiding them)
         /// 2. Force HIDE any properties if location check IS complete
-        /// 3. Let the game handle everything else (including price display formatting)
+        /// 3. Temporarily add owned AP properties to UnownedProperties/UnownedBusinesses so the
+        ///    game's entire dialogue flow (price display, fund checks) works naturally
+        /// 4. Let the game handle everything else
         /// </summary>
         static void Postfix(string choiceLabel, ref bool __result)
         {
             try
             {
+                // Scout realtor locations as hints the first time the player talks to Ray
+                NarcopelagoRealtor.ScoutRealtorHints();
+
                 // Check if this is a property
                 var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
 
                 if (property != null)
                 {
-                    // Only apply our logic if this property has an AP location.
+                    // Only apply our logic when randomization is enabled and this property has an AP location.
                     // Properties with no AP location (e.g. Hyland Manor) are left entirely to the game.
+                    if (!NarcopelagoOptions.Randomize_drug_making_properties)
+                        return;
+
                     string locationName = $"Realtor Purchase, {property.PropertyName}";
                     if (Data_Locations.GetLocationId(locationName) <= 0)
                         return;
 
                     bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(property.PropertyName);
-                    __result = !locationComplete;
+                    if (locationComplete)
+                    {
+                        __result = false;
+                        return;
+                    }
+
+                    // Show the property and ensure it's in UnownedProperties so the
+                    // game's dialogue code can find it for price display + fund checks
+                    if (property.IsOwned)
+                    {
+                        NarcopelagoRealtor.EnsurePropertyInUnownedList(property);
+                    }
+                    __result = true;
                     return;
                 }
 
@@ -754,13 +891,27 @@ namespace Narcopelago
 
                 if (business != null)
                 {
-                    // Only apply our logic if this business has an AP location.
+                    // Only apply our logic when randomization is enabled and this business has an AP location.
+                    if (!NarcopelagoOptions.Randomize_business_properties)
+                        return;
+
                     string locationName = $"Realtor Purchase, {business.PropertyName}";
                     if (Data_Locations.GetLocationId(locationName) <= 0)
                         return;
 
                     bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName);
-                    __result = !locationComplete;
+                    if (locationComplete)
+                    {
+                        __result = false;
+                        return;
+                    }
+
+                    // Show the business and ensure it's in UnownedBusinesses
+                    if (business.IsOwned)
+                    {
+                        NarcopelagoRealtor.EnsureBusinessInUnownedList(business);
+                    }
+                    __result = true;
                     return;
                 }
             }
@@ -772,4 +923,5 @@ namespace Narcopelago
             // Not a property/business we recognize - keep original result
         }
     }
-}
+
+    }
