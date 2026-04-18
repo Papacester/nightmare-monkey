@@ -93,6 +93,13 @@ namespace Narcopelago
         /// </summary>
         public static bool Deathlink { get; private set; } = false;
 
+        /// <summary>
+        /// List of enabled DeathLink consequence options.
+        /// Possible values: "sleep_trap", "arrested", "random_trap", "death"
+        /// When a DeathLink is received, one of these is chosen at random.
+        /// </summary>
+        public static List<string> DeathLink_options { get; private set; } = new List<string>();
+
         // ============================================================
         // Bundle Options
         // ============================================================
@@ -171,6 +178,12 @@ namespace Narcopelago
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
                 Deathlink = GetBool(slotData, "death_link", false);
+                DeathLink_options = GetStringList(slotData, "death_link_options");
+                if (DeathLink_options.Count == 0 && Deathlink)
+                {
+                    // Default to death (send to hospital) if deathlink is on but no options specified
+                    DeathLink_options.Add("death");
+                }
 
                 // Bundle options
                 Number_of_xp_bundles = GetInt(slotData, "number_of_xp_bundles", 0);
@@ -221,6 +234,12 @@ namespace Narcopelago
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
                 Deathlink = GetBool(slotData, "death_link", false);
+                DeathLink_options = GetStringList(slotData, "death_link_options");
+                if (DeathLink_options.Count == 0 && Deathlink)
+                {
+                    // Default to death (send to hospital) if deathlink is on but no options specified
+                    DeathLink_options.Add("death");
+                }
 
                 // Bundle options
                 Number_of_xp_bundles = GetInt(slotData, "number_of_xp_bundles", 0);
@@ -258,6 +277,7 @@ namespace Narcopelago
             Randomize_suppliers = false;
             Randomize_sewer_key = false;
             Deathlink = false;
+            DeathLink_options = new List<string>();
 
             // Bundle options
             Number_of_xp_bundles = 0;
@@ -287,6 +307,7 @@ namespace Narcopelago
             MelonLogger.Msg($"  Randomize_suppliers: {Randomize_suppliers}");
             MelonLogger.Msg($"  Randomize_sewer_key: {Randomize_sewer_key}");
             MelonLogger.Msg($"  DeathLink: {Deathlink}");
+            MelonLogger.Msg($"  DeathLink_options: [{string.Join(", ", DeathLink_options)}]");
             MelonLogger.Msg($"  Number_of_xp_bundles: {Number_of_xp_bundles}");
             MelonLogger.Msg($"  Amount_of_xp_per_bundle_min: {Amount_of_xp_per_bundle_min}");
             MelonLogger.Msg($"  Amount_of_xp_per_bundle_max: {Amount_of_xp_per_bundle_max}");

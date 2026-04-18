@@ -290,7 +290,7 @@ namespace Narcopelago
         /// </summary>
         public static void OnDeathLinkReceived(string source, string cause)
         {
-            string message = $"☠️ {source} {cause}";
+            string message = $"[DeathLink] {source} {cause}";
             
             AddToHistory(_filteredMessagesHistory, message);
             _messageQueue.Enqueue((CONTACT_FILTERED, message));
@@ -304,7 +304,7 @@ namespace Narcopelago
         /// </summary>
         public static void OnDeathLinkSent(string playerName, string cause)
         {
-            string message = $"☠️ You {cause}";
+            string message = $"[DeathLink] You {cause}";
             
             AddToHistory(_filteredMessagesHistory, message);
             _messageQueue.Enqueue((CONTACT_FILTERED, message));
