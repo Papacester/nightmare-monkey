@@ -12,16 +12,32 @@ namespace Narcopelago
     /// Handles goal/win condition checking for Schedule I Archipelago.
     /// 
     /// Goal types (NarcopelagoOptions.Goal):
-    /// 0 = Networth goal only
-    /// 1 = Networth AND Finish the Job quest complete
-    /// 2 = Finish the Job quest complete only
+    /// 0 = Bomb Fragments only
+    /// 1 = Missions only (Finish the Job quest)
+    /// 2 = Missions AND Networth
+    /// 3 = Missions AND Bomb Fragments
+    /// 4 = Missions AND Networth AND Bomb Fragments
+    /// 5 = Bomb Fragments AND Networth
     /// </summary>
     public static class NarcopelagoGoal
     {
+        // Goal type constants
+        public const int GOAL_BOMB_FRAGMENTS_ONLY = 0;
+        public const int GOAL_MISSIONS_ONLY = 1;
+        public const int GOAL_MISSIONS_NETWORTH = 2;
+        public const int GOAL_MISSIONS_BOMB_FRAGMENTS = 3;
+        public const int GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS = 4;
+        public const int GOAL_BOMB_FRAGMENTS_NETWORTH = 5;
+
         /// <summary>
         /// The location name for the final quest step.
         /// </summary>
         private const string FINISH_THE_JOB_LOCATION = "Finishing the Job|Wait for the bomb to detonate";
+
+        /// <summary>
+        /// The modern ID for the Bomb Fragment item.
+        /// </summary>
+        public const int BOMB_FRAGMENT_MODERN_ID = 600;
 
         /// <summary>
         /// Tracks if the networth goal has been reached.
@@ -29,9 +45,19 @@ namespace Narcopelago
         private static bool _networthGoalReached = false;
 
         /// <summary>
-        /// Tracks if the Finish the Job quest has been completed.
+        /// Tracks if the Finish the Job quest has been completed (missions goal).
         /// </summary>
         private static bool _finishTheJobComplete = false;
+
+        /// <summary>
+        /// Tracks if the bomb fragments goal has been reached.
+        /// </summary>
+        private static bool _bombFragmentsGoalReached = false;
+
+        /// <summary>
+        /// Tracks the number of bomb fragments received.
+        /// </summary>
+        private static int _bombFragmentsReceived = 0;
 
         /// <summary>
         /// Tracks if the overall goal has been completed and sent to server.
@@ -57,6 +83,26 @@ namespace Narcopelago
         /// Indicates whether the goal has been completed.
         /// </summary>
         public static bool IsGoalComplete => _goalCompleted;
+
+        /// <summary>
+        /// Gets the number of bomb fragments received.
+        /// </summary>
+        public static int BombFragmentsReceived => _bombFragmentsReceived;
+
+        /// <summary>
+        /// Gets whether the bomb fragments goal has been reached.
+        /// </summary>
+        public static bool IsBombFragmentsGoalReached => _bombFragmentsGoalReached;
+
+        /// <summary>
+        /// Gets whether the networth goal has been reached.
+        /// </summary>
+        public static bool IsNetworthGoalReached => _networthGoalReached;
+
+        /// <summary>
+        /// Gets whether the missions goal has been reached.
+        /// </summary>
+        public static bool IsMissionsGoalReached => _finishTheJobComplete;
 
         /// <summary>
         /// Sets whether we're in a game scene.
@@ -88,15 +134,33 @@ namespace Narcopelago
             }
             _checkFrameCounter = 0;
 
-            // Check if networth goal needs to be checked
+            // Check if networth goal needs to be checked based on goal type
             int goalType = NarcopelagoOptions.Goal;
-            if (goalType == 0 || goalType == 1)
+            if (GoalRequiresNetworth(goalType))
             {
                 CheckNetworthGoal();
             }
 
             // Check overall goal completion
             CheckGoalCompletion();
+        }
+
+        /// <summary>
+        /// Called when a bomb fragment item is received from Archipelago.
+        /// </summary>
+        public static void OnBombFragmentReceived()
+        {
+            _bombFragmentsReceived++;
+            int required = NarcopelagoOptions.Number_of_bomb_fragments_required;
+
+            MelonLogger.Msg($"[Goal] Bomb Fragment received! ({_bombFragmentsReceived}/{required})");
+
+            if (!_bombFragmentsGoalReached && _bombFragmentsReceived >= required && required > 0)
+            {
+                MelonLogger.Msg($"[Goal] All bomb fragments collected!");
+                _bombFragmentsGoalReached = true;
+                CheckGoalCompletion();
+            }
         }
 
         /// <summary>
@@ -112,7 +176,7 @@ namespace Narcopelago
 
             if (locationName == FINISH_THE_JOB_LOCATION)
             {
-                MelonLogger.Msg("[Goal] Finish the Job quest completed!");
+                MelonLogger.Msg("[Goal] Finish the Job quest completed (Missions goal reached)!");
                 _finishTheJobComplete = true;
                 CheckGoalCompletion();
             }
@@ -170,6 +234,38 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// Checks if the given goal type requires networth.
+        /// </summary>
+        private static bool GoalRequiresNetworth(int goalType)
+        {
+            return goalType == GOAL_MISSIONS_NETWORTH || 
+                   goalType == GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS ||
+                   goalType == GOAL_BOMB_FRAGMENTS_NETWORTH;
+        }
+
+        /// <summary>
+        /// Checks if the given goal type requires missions (Finish the Job).
+        /// </summary>
+        private static bool GoalRequiresMissions(int goalType)
+        {
+            return goalType == GOAL_MISSIONS_ONLY || 
+                   goalType == GOAL_MISSIONS_NETWORTH || 
+                   goalType == GOAL_MISSIONS_BOMB_FRAGMENTS || 
+                   goalType == GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS;
+        }
+
+        /// <summary>
+        /// Checks if the given goal type requires bomb fragments.
+        /// </summary>
+        private static bool GoalRequiresBombFragments(int goalType)
+        {
+            return goalType == GOAL_BOMB_FRAGMENTS_ONLY || 
+                   goalType == GOAL_MISSIONS_BOMB_FRAGMENTS || 
+                   goalType == GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS ||
+                   goalType == GOAL_BOMB_FRAGMENTS_NETWORTH;
+        }
+
+        /// <summary>
         /// Checks if all goal conditions are met and sends completion to server.
         /// </summary>
         private static void CheckGoalCompletion()
@@ -184,16 +280,34 @@ namespace Narcopelago
 
             switch (goalType)
             {
-                case 0: // Networth only
-                    goalMet = _networthGoalReached;
+                case GOAL_BOMB_FRAGMENTS_ONLY:
+                    // Bomb Fragments only
+                    goalMet = _bombFragmentsGoalReached;
                     break;
 
-                case 1: // Networth AND Finish the Job
-                    goalMet = _networthGoalReached && _finishTheJobComplete;
-                    break;
-
-                case 2: // Finish the Job only
+                case GOAL_MISSIONS_ONLY:
+                    // Missions only (Finish the Job)
                     goalMet = _finishTheJobComplete;
+                    break;
+
+                case GOAL_MISSIONS_NETWORTH:
+                    // Missions AND Networth
+                    goalMet = _finishTheJobComplete && _networthGoalReached;
+                    break;
+
+                case GOAL_MISSIONS_BOMB_FRAGMENTS:
+                    // Missions AND Bomb Fragments
+                    goalMet = _finishTheJobComplete && _bombFragmentsGoalReached;
+                    break;
+
+                case GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS:
+                    // Missions AND Networth AND Bomb Fragments
+                    goalMet = _finishTheJobComplete && _networthGoalReached && _bombFragmentsGoalReached;
+                    break;
+
+                case GOAL_BOMB_FRAGMENTS_NETWORTH:
+                    // Bomb Fragments AND Networth (no missions)
+                    goalMet = _bombFragmentsGoalReached && _networthGoalReached;
                     break;
 
                 default:
@@ -296,6 +410,8 @@ namespace Narcopelago
         {
             _networthGoalReached = false;
             _finishTheJobComplete = false;
+            _bombFragmentsGoalReached = false;
+            _bombFragmentsReceived = 0;
             _goalCompleted = false;
             _inGameScene = false;
             _checkFrameCounter = 0;
@@ -310,17 +426,35 @@ namespace Narcopelago
             int goalType = NarcopelagoOptions.Goal;
             string goalDescription = goalType switch
             {
-                0 => "Networth Only",
-                1 => "Networth AND Finish the Job",
-                2 => "Finish the Job Only",
+                GOAL_BOMB_FRAGMENTS_ONLY => "Bomb Fragments Only",
+                GOAL_MISSIONS_ONLY => "Missions Only (Finish the Job)",
+                GOAL_MISSIONS_NETWORTH => "Missions AND Networth",
+                GOAL_MISSIONS_BOMB_FRAGMENTS => "Missions AND Bomb Fragments",
+                GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS => "Missions AND Networth AND Bomb Fragments",
+                GOAL_BOMB_FRAGMENTS_NETWORTH => "Bomb Fragments AND Networth",
                 _ => $"Unknown ({goalType})"
             };
 
             MelonLogger.Msg($"[Goal] === Goal Status ===");
             MelonLogger.Msg($"[Goal] Type: {goalDescription}");
-            MelonLogger.Msg($"[Goal] Required Networth: ${NarcopelagoOptions.Networth_amount_required:N0}");
-            MelonLogger.Msg($"[Goal] Networth Reached: {_networthGoalReached}");
-            MelonLogger.Msg($"[Goal] Finish the Job Complete: {_finishTheJobComplete}");
+
+            if (GoalRequiresNetworth(goalType))
+            {
+                MelonLogger.Msg($"[Goal] Required Networth: ${NarcopelagoOptions.Networth_amount_required:N0}");
+                MelonLogger.Msg($"[Goal] Networth Reached: {_networthGoalReached}");
+            }
+
+            if (GoalRequiresMissions(goalType))
+            {
+                MelonLogger.Msg($"[Goal] Missions (Finish the Job) Complete: {_finishTheJobComplete}");
+            }
+
+            if (GoalRequiresBombFragments(goalType))
+            {
+                MelonLogger.Msg($"[Goal] Bomb Fragments: {_bombFragmentsReceived}/{NarcopelagoOptions.Number_of_bomb_fragments_required}");
+                MelonLogger.Msg($"[Goal] Bomb Fragments Goal Reached: {_bombFragmentsGoalReached}");
+            }
+
             MelonLogger.Msg($"[Goal] Goal Completed: {_goalCompleted}");
         }
     }

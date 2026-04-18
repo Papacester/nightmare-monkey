@@ -184,6 +184,10 @@ namespace Narcopelago
             {
                 HandleTrapItem(itemName);
             }
+            else if (IsBombFragmentItem(itemName))
+            {
+                HandleBombFragmentItem(itemName);
+            }
             // Log other types but don't process them yet
             else if (IsDealerUnlockItem(itemName))
             {
@@ -196,6 +200,14 @@ namespace Narcopelago
         }
 
         #region Item Type Checks
+
+        /// <summary>
+        /// Checks if an item is a Bomb Fragment item.
+        /// </summary>
+        private static bool IsBombFragmentItem(string itemName)
+        {
+            return itemName == "Bomb Fragment" || Data_Items.GetItemId(itemName) == NarcopelagoGoal.BOMB_FRAGMENT_MODERN_ID;
+        }
 
         /// <summary>
         /// Checks if an item is a customer unlock item.
@@ -414,6 +426,16 @@ namespace Narcopelago
         {
             MelonLogger.Msg($"[Items] Processing trap item: {itemName}");
             NarcopelagoTraps.OnTrapItemReceived(itemName);
+        }
+
+        /// <summary>
+        /// Handle receiving a Bomb Fragment item.
+        /// Notifies NarcopelagoGoal to track progress toward the goal.
+        /// </summary>
+        private static void HandleBombFragmentItem(string itemName)
+        {
+            MelonLogger.Msg($"[Items] Processing Bomb Fragment item: {itemName}");
+            NarcopelagoGoal.OnBombFragmentReceived();
         }
 
         #endregion

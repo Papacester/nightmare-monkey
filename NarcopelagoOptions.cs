@@ -89,6 +89,11 @@ namespace Narcopelago
         public static bool Randomize_sewer_key { get; private set; } = false;
 
         /// <summary>
+        /// Number of bomb fragments required to complete the goal (when goal type includes bomb fragments).
+        /// </summary>
+        public static int Number_of_bomb_fragments_required { get; private set; } = 0;
+
+        /// <summary>
         /// if Deathlink is enabled or not
         /// </summary>
         public static bool Deathlink { get; private set; } = false;
@@ -154,7 +159,7 @@ namespace Narcopelago
             try
             {
                 var slotData = session.DataStorage.GetSlotData();
-                
+
                 if (slotData == null)
                 {
                     MelonLogger.Warning("SlotData is null - using default options");
@@ -163,7 +168,7 @@ namespace Narcopelago
                 }
 
                 RawSlotData = slotData;
-                
+
                 // Parse each option from slot data
                 Goal = GetInt(slotData, "goal", 0);
                 Networth_amount_required = GetInt(slotData, "networth_amount_required", 0);
@@ -177,6 +182,7 @@ namespace Narcopelago
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
+                Number_of_bomb_fragments_required = GetInt(slotData, "number_of_bomb_fragments_required", 0);
                 Deathlink = GetBool(slotData, "death_link", false);
                 DeathLink_options = GetStringList(slotData, "death_link_options");
                 if (DeathLink_options.Count == 0 && Deathlink)
@@ -233,6 +239,7 @@ namespace Narcopelago
                 Randomize_level_unlocks = GetBool(slotData, "randomize_level_unlocks", false);
                 Randomize_suppliers = GetBool(slotData, "randomize_suppliers", false);
                 Randomize_sewer_key = GetBool(slotData, "randomize_sewer_key", false);
+                Number_of_bomb_fragments_required = GetInt(slotData, "number_of_bomb_fragments_required", 0);
                 Deathlink = GetBool(slotData, "death_link", false);
                 DeathLink_options = GetStringList(slotData, "death_link_options");
                 if (DeathLink_options.Count == 0 && Deathlink)
@@ -276,6 +283,7 @@ namespace Narcopelago
             Randomize_level_unlocks = false;
             Randomize_suppliers = false;
             Randomize_sewer_key = false;
+            Number_of_bomb_fragments_required = 0;
             Deathlink = false;
             DeathLink_options = new List<string>();
 
@@ -296,6 +304,7 @@ namespace Narcopelago
             MelonLogger.Msg("=== Archipelago Options ===");
             MelonLogger.Msg($"  Goal: {Goal}");
             MelonLogger.Msg($"  Networth_amount_required: {Networth_amount_required}");
+            MelonLogger.Msg($"  Number_of_bomb_fragments_required: {Number_of_bomb_fragments_required}");
             MelonLogger.Msg($"  Randomize_cartel_influence: {Randomize_cartel_influence}");
             MelonLogger.Msg($"  Randomize_drug_making_properties: {Randomize_drug_making_properties}");
             MelonLogger.Msg($"  Randomize_business_properties: {Randomize_business_properties}");

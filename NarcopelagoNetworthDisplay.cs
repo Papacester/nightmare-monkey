@@ -7,8 +7,9 @@ using UnityEngine;
 namespace Narcopelago
 {
     /// <summary>
-    /// Displays the current networth in the top-right corner of the screen
-    /// when the goal type requires networth (Goal type 0 or 1).
+    /// Displays goal progress in the top-right corner of the screen.
+    /// Shows networth progress when goal requires networth (Goal type 2 or 4).
+    /// Shows bomb fragment progress when goal requires bomb fragments (Goal type 0, 3, or 4).
     /// 
     /// Uses Unity's OnGUI system which is reliable in IL2CPP environments.
     /// </summary>
@@ -124,7 +125,7 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Called by MelonMod.OnGUI to draw the networth display.
+        /// Called by MelonMod.OnGUI to draw the goal progress display.
         /// Must be called from Core.OnGUI().
         /// </summary>
         public static void OnGUI()
@@ -141,7 +142,7 @@ namespace Narcopelago
                 if (_labelStyle == null)
                 {
                     _labelStyle = new GUIStyle(GUI.skin.label);
-                    _labelStyle.fontSize = 30;
+                    _labelStyle.fontSize = 26;
                     _labelStyle.fontStyle = FontStyle.Bold;
                     _labelStyle.alignment = TextAnchor.MiddleRight;
                     _labelStyle.normal.textColor = Color.green;
@@ -154,9 +155,21 @@ namespace Narcopelago
                     _boxStyle.normal.background = MakeTexture(2, 2, new Color(0f, 0f, 0f, 0.3f));
                 }
 
+                int goalType = NarcopelagoOptions.Goal;
+                bool showNetworth = GoalRequiresNetworth(goalType);
+                bool showBombFragments = GoalRequiresBombFragments(goalType);
+
+                // Calculate how many lines we need
+                int lineCount = 0;
+                if (showNetworth) lineCount++;
+                if (showBombFragments) lineCount++;
+
+                if (lineCount == 0) return;
+
                 // Calculate position (top-right corner)
                 float boxWidth = 650f;
-                float boxHeight = 50f;
+                float lineHeight = 70f;
+                float boxHeight = lineHeight * lineCount + 10f;
                 float padding = 10f;
                 float x = Screen.width - boxWidth - padding;
                 float y = padding + 50f; // Offset from top to avoid other UI
@@ -166,35 +179,69 @@ namespace Narcopelago
                 // Draw background box
                 GUI.Box(boxRect, "", _boxStyle);
 
-                // Format the text
-                string text;
-                if (_currentNetworth >= _requiredNetworth)
+                float currentY = y + 5f;
+
+                // Draw networth progress if needed
+                if (showNetworth)
                 {
-                    text = $"Networth: ${_currentNetworth:N0} ✓ GOAL!";
-                    _labelStyle.normal.textColor = Color.green;
-                }
-                else
-                {
-                    float progress = _requiredNetworth > 0 ? (_currentNetworth / _requiredNetworth) * 100f : 0f;
-                    text = $"Networth: ${_currentNetworth:N0} / ${_requiredNetworth:N0} ({progress:F1}%)";
-                    
-                    // Color based on progress
-                    if (progress >= 75f)
+                    string networthText;
+                    if (_currentNetworth >= _requiredNetworth)
+                    {
+                        networthText = $"Networth: ${_currentNetworth:N0} ✓ GOAL!";
                         _labelStyle.normal.textColor = Color.green;
-                    else if (progress >= 50f)
-                        _labelStyle.normal.textColor = Color.yellow;
+                    }
                     else
-                        _labelStyle.normal.textColor = new Color(1f, 0.6f, 0.2f); // Orange
+                    {
+                        float progress = _requiredNetworth > 0 ? (_currentNetworth / _requiredNetworth) * 100f : 0f;
+                        networthText = $"Networth: ${_currentNetworth:N0} / ${_requiredNetworth:N0} ({progress:F1}%)";
+                        SetColorByProgress(progress);
+                    }
+
+                    Rect networthRect = new Rect(x + 5f, currentY, boxWidth - 10f, lineHeight);
+                    GUI.Label(networthRect, networthText, _labelStyle);
+                    currentY += lineHeight;
                 }
 
-                // Draw the label
-                Rect labelRect = new Rect(x + 5f, y, boxWidth - 10f, boxHeight);
-                GUI.Label(labelRect, text, _labelStyle);
+                // Draw bomb fragment progress if needed
+                if (showBombFragments)
+                {
+                    int fragmentsReceived = NarcopelagoGoal.BombFragmentsReceived;
+                    int fragmentsRequired = NarcopelagoOptions.Number_of_bomb_fragments_required;
+
+                    string fragmentText;
+                    if (fragmentsReceived >= fragmentsRequired && fragmentsRequired > 0)
+                    {
+                        fragmentText = $"Bomb Fragments: {fragmentsReceived}/{fragmentsRequired} ✓ COMPLETE!";
+                        _labelStyle.normal.textColor = Color.green;
+                    }
+                    else
+                    {
+                        float progress = fragmentsRequired > 0 ? ((float)fragmentsReceived / fragmentsRequired) * 100f : 0f;
+                        fragmentText = $"Bomb Fragments: {fragmentsReceived}/{fragmentsRequired} ({progress:F1}%)";
+                        SetColorByProgress(progress);
+                    }
+
+                    Rect fragmentRect = new Rect(x + 5f, currentY, boxWidth - 10f, lineHeight);
+                    GUI.Label(fragmentRect, fragmentText, _labelStyle);
+                }
             }
             catch (Exception ex)
             {
-                MelonLogger.Error($"[NetworthDisplay] Error in OnGUI: {ex.Message}");
+                MelonLogger.Error($"[GoalDisplay] Error in OnGUI: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Sets the label color based on progress percentage.
+        /// </summary>
+        private static void SetColorByProgress(float progress)
+        {
+            if (progress >= 75f)
+                _labelStyle.normal.textColor = Color.green;
+            else if (progress >= 50f)
+                _labelStyle.normal.textColor = Color.yellow;
+            else
+                _labelStyle.normal.textColor = new Color(1f, 0.6f, 0.2f); // Orange
         }
 
         /// <summary>
@@ -207,7 +254,7 @@ namespace Narcopelago
             {
                 pixels[i] = color;
             }
-            
+
             Texture2D texture = new Texture2D(width, height);
             texture.SetPixels(pixels);
             texture.Apply();
@@ -215,7 +262,28 @@ namespace Narcopelago
         }
 
         /// <summary>
-        /// Checks if the networth display should be shown.
+        /// Checks if the goal type requires networth.
+        /// </summary>
+        private static bool GoalRequiresNetworth(int goalType)
+        {
+            return goalType == NarcopelagoGoal.GOAL_MISSIONS_NETWORTH || 
+                   goalType == NarcopelagoGoal.GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS ||
+                   goalType == NarcopelagoGoal.GOAL_BOMB_FRAGMENTS_NETWORTH;
+        }
+
+        /// <summary>
+        /// Checks if the goal type requires bomb fragments.
+        /// </summary>
+        private static bool GoalRequiresBombFragments(int goalType)
+        {
+            return goalType == NarcopelagoGoal.GOAL_BOMB_FRAGMENTS_ONLY || 
+                   goalType == NarcopelagoGoal.GOAL_MISSIONS_BOMB_FRAGMENTS || 
+                   goalType == NarcopelagoGoal.GOAL_MISSIONS_NETWORTH_BOMB_FRAGMENTS ||
+                   goalType == NarcopelagoGoal.GOAL_BOMB_FRAGMENTS_NETWORTH;
+        }
+
+        /// <summary>
+        /// Checks if the goal display should be shown.
         /// </summary>
         private static bool ShouldShowDisplay()
         {
@@ -223,7 +291,8 @@ namespace Narcopelago
                 return false;
 
             int goalType = NarcopelagoOptions.Goal;
-            return goalType == 0 || goalType == 1;
+            // Show display if goal requires networth or bomb fragments
+            return GoalRequiresNetworth(goalType) || GoalRequiresBombFragments(goalType);
         }
 
         /// <summary>
