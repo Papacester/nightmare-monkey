@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace Narcopelago
@@ -24,6 +25,17 @@ namespace Narcopelago
     /// </summary>
     public static class NarcopelagoDeathLink
     {
+        // ============================================================
+        // DEBUG SETTINGS - Set to false to disable debug key
+        // ============================================================
+        /// <summary>
+        /// TEMPORARY DEBUG: Enable/disable the debug key for testing DeathLink.
+        /// Set this to FALSE before production release.
+        /// Press F9 to simulate receiving a DeathLink.
+        /// </summary>
+        private const bool ENABLE_DEBUG_KEY = false;
+        // ============================================================
+
         private static DeathLinkService _deathLinkService;
         private static bool _isEnabled = false;
         private static bool _isProcessingReceivedDeath = false;
@@ -288,7 +300,7 @@ namespace Narcopelago
         /// <summary>
         /// Random instance for selecting death options.
         /// </summary>
-        private static readonly Random _random = new Random();
+        private static readonly System.Random _random = new System.Random();
 
         /// <summary>
         /// The trap types that can be chosen for the "random_trap" DeathLink option.
@@ -306,6 +318,12 @@ namespace Narcopelago
         /// </summary>
         public static void ProcessMainThreadQueue()
         {
+            // Debug key handler (F9 to simulate receiving DeathLink)
+            if (ENABLE_DEBUG_KEY)
+            {
+                HandleDebugKey();
+            }
+
             if (!_isEnabled || !NarcopelagoOptions.Deathlink)
             {
                 return;
@@ -325,6 +343,30 @@ namespace Narcopelago
         }
 
         /// <summary>
+        /// TEMPORARY DEBUG METHOD: Handles the debug key to simulate receiving a DeathLink.
+        /// Press F9 to trigger a test DeathLink.
+        /// Set ENABLE_DEBUG_KEY to false to disable this feature.
+        /// </summary>
+        private static void HandleDebugKey()
+        {
+            if (Input.GetKeyDown(KeyCode.F9))
+            {
+                MelonLogger.Warning("[DeathLink DEBUG] F9 pressed - simulating DeathLink received!");
+
+                // Queue a fake death to be processed
+                string debugSource = "DEBUG_PLAYER";
+                string debugCause = "pressed F9 for testing";
+
+                _pendingDeaths.Enqueue((debugSource, debugCause));
+
+                // Also notify APContacts like a real death would
+                NarcopelagoAPContacts.OnDeathLinkReceived(debugSource, debugCause);
+
+                MelonLogger.Warning("[DeathLink DEBUG] Test DeathLink queued!");
+            }
+        }
+
+        /// <summary>
         /// Picks a random DeathLink option and executes it.
         /// </summary>
         private static void ExecuteDeathLinkConsequence(string source, string cause)
@@ -332,8 +374,8 @@ namespace Narcopelago
             var options = NarcopelagoOptions.DeathLink_options;
             if (options == null || options.Count == 0)
             {
-                MelonLogger.Warning("[DeathLink] No DeathLink options configured - defaulting to arrested");
-                ArrestPlayer(source, cause);
+                MelonLogger.Warning("[DeathLink] No DeathLink options configured - defaulting to death");
+                KillPlayer(source, cause);
                 return;
             }
 
@@ -342,21 +384,21 @@ namespace Narcopelago
 
             switch (chosen.ToLowerInvariant())
             {
-                case "sleep_trap":
+                case "sleep trap":
                     ExecuteSleepTrap(source, cause);
                     break;
                 case "arrested":
                     ArrestPlayer(source, cause);
                     break;
-                case "random_trap":
+                case "random trap":
                     ExecuteRandomTrap(source, cause);
                     break;
                 case "death":
                     KillPlayer(source, cause);
                     break;
                 default:
-                    MelonLogger.Warning($"[DeathLink] Unknown option '{chosen}' - defaulting to arrested");
-                    ArrestPlayer(source, cause);
+                    MelonLogger.Warning($"[DeathLink] Unknown option '{chosen}' - defaulting to death");
+                    KillPlayer(source, cause);
                     break;
             }
         }

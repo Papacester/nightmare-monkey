@@ -853,6 +853,36 @@ namespace Narcopelago
                 // Scout realtor locations as hints the first time the player talks to Ray
                 NarcopelagoRealtor.ScoutRealtorHints();
 
+                // IMPORTANT: Check businesses FIRST since Business extends Property
+                var business = Business.Businesses.Find(
+                    new Func<Business, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
+
+                if (business != null)
+                {
+                    // Only apply our logic when randomization is enabled and this business has an AP location.
+                    if (!NarcopelagoOptions.Randomize_business_properties)
+                        return;
+
+                    string locationName = $"Realtor Purchase, {business.PropertyName}";
+                    if (Data_Locations.GetLocationId(locationName) <= 0)
+                        return;
+
+                    bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName);
+                    if (locationComplete)
+                    {
+                        __result = false;
+                        return;
+                    }
+
+                    // Show the business and ensure it's in UnownedBusinesses
+                    if (business.IsOwned)
+                    {
+                        NarcopelagoRealtor.EnsureBusinessInUnownedList(business);
+                    }
+                    __result = true;
+                    return;
+                }
+
                 // Check if this is a property
                 var property = Property.Properties.Find(
                     new Func<Property, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
@@ -880,36 +910,6 @@ namespace Narcopelago
                     if (property.IsOwned)
                     {
                         NarcopelagoRealtor.EnsurePropertyInUnownedList(property);
-                    }
-                    __result = true;
-                    return;
-                }
-
-                // Check if this is a business
-                var business = Business.Businesses.Find(
-                    new Func<Business, bool>(x => string.Equals(x.PropertyCode, choiceLabel, StringComparison.OrdinalIgnoreCase)));
-
-                if (business != null)
-                {
-                    // Only apply our logic when randomization is enabled and this business has an AP location.
-                    if (!NarcopelagoOptions.Randomize_business_properties)
-                        return;
-
-                    string locationName = $"Realtor Purchase, {business.PropertyName}";
-                    if (Data_Locations.GetLocationId(locationName) <= 0)
-                        return;
-
-                    bool locationComplete = NarcopelagoRealtor.HasCompletedPurchaseLocation(business.PropertyName);
-                    if (locationComplete)
-                    {
-                        __result = false;
-                        return;
-                    }
-
-                    // Show the business and ensure it's in UnownedBusinesses
-                    if (business.IsOwned)
-                    {
-                        NarcopelagoRealtor.EnsureBusinessInUnownedList(business);
                     }
                     __result = true;
                     return;

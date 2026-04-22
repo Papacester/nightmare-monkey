@@ -100,7 +100,7 @@ namespace Narcopelago
 
         /// <summary>
         /// List of enabled DeathLink consequence options.
-        /// Possible values: "sleep_trap", "arrested", "random_trap", "death"
+        /// Possible values: "sleep trap", "arrested", "random trap", "death"
         /// When a DeathLink is received, one of these is chosen at random.
         /// </summary>
         public static List<string> DeathLink_options { get; private set; } = new List<string>();
