@@ -483,21 +483,49 @@ namespace Narcopelago
 
                 // Check if any of the customer's connections are unlocked
                 // This allows sampling locked customers if they have an unlocked connection
-                // (This is how the game normally works - you can sample someone if you know their friend)
+                // Connections can be customers, dealers, or suppliers
                 string sampleLocation = Data_Locations.GetSampleLocationForCustomer(customerName);
                 var requiredUnlocks = Data_Locations.GetRequiredUnlocksForSample(sampleLocation);
 
-                foreach (var requiredCustomer in requiredUnlocks)
+                if (requiredUnlocks.Count > 0)
+                {
+                    MelonLogger.Msg($"[Customers] Checking connections for '{customerName}' sample: {string.Join(", ", requiredUnlocks)}");
+                }
+
+                foreach (var requiredConnection in requiredUnlocks)
                 {
                     // Skip self-reference
-                    if (StringHelper.EqualsNormalized(requiredCustomer, customerName))
+                    if (StringHelper.EqualsNormalized(requiredConnection, customerName))
                         continue;
-                        
-                    // Check if this connection is unlocked (via AP or in-game)
-                    if (IsCustomerUnlockedViaAP(requiredCustomer) || IsCustomerUnlockedInGame(requiredCustomer))
+
+                    // Check if this connection is a customer and is unlocked (via AP or in-game)
+                    bool isCustomerUnlocked = IsCustomerUnlockedViaAP(requiredConnection) || IsCustomerUnlockedInGame(requiredConnection);
+                    if (isCustomerUnlocked)
                     {
+                        MelonLogger.Msg($"[Customers] '{customerName}' can be sampled - customer connection '{requiredConnection}' is unlocked");
                         return true;
                     }
+
+                    // Check if this connection is a dealer and is recruited (via AP or in-game)
+                    bool isDealerRecruited = NarcopelagoDealers.IsDealerUnlockedViaAP(requiredConnection) || NarcopelagoDealers.IsDealerRecruitedInGame(requiredConnection);
+                    if (isDealerRecruited)
+                    {
+                        MelonLogger.Msg($"[Customers] '{customerName}' can be sampled - dealer connection '{requiredConnection}' is recruited");
+                        return true;
+                    }
+
+                    // Check if this connection is a supplier and is unlocked (via AP or in-game)
+                    bool isSupplierUnlocked = NarcopelagoSuppliers.IsSupplierUnlockedViaAP(requiredConnection) || NarcopelagoSuppliers.IsSupplierUnlockedInGame(requiredConnection);
+                    if (isSupplierUnlocked)
+                    {
+                        MelonLogger.Msg($"[Customers] '{customerName}' can be sampled - supplier connection '{requiredConnection}' is unlocked");
+                        return true;
+                    }
+                }
+
+                if (requiredUnlocks.Count > 0)
+                {
+                    MelonLogger.Msg($"[Customers] '{customerName}' cannot be sampled - no connections are unlocked");
                 }
 
                 return false;

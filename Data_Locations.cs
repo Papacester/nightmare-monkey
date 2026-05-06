@@ -242,15 +242,15 @@ namespace Narcopelago
                 }
 
                 /// <summary>
-                /// Gets the list of customer unlocks that would make this sample location available.
-                /// Parses the requirements.randomize_customers.has_any array.
+                /// Gets the list of customer, dealer, and supplier unlocks that would make this sample location available.
+                /// Parses the requirements from randomize_customers.has_any, randomize_dealers.has, and randomize_suppliers.has.
                 /// </summary>
                 /// <param name="locationName">The sample location name (e.g., "Successful Sample: Beth Penn")</param>
-                /// <returns>List of customer names whose unlock would enable this sample, or empty list if not found</returns>
+                /// <returns>List of names (customers, dealers, suppliers) whose unlock would enable this sample, or empty list if not found</returns>
                 public static List<string> GetRequiredUnlocksForSample(string locationName)
                 {
                     var result = new List<string>();
-            
+
                     var location = GetLocation(locationName);
                     if (location == null) return result;
 
@@ -259,36 +259,76 @@ namespace Narcopelago
                         var reqDict = location.GetRequirementsDict();
                         if (reqDict == null) return result;
 
-                        // Navigate: requirements.randomize_customers.has_any
-                        if (!reqDict.TryGetValue("randomize_customers", out var randomizeCustomers))
-                            return result;
-
-                        JObject randomizeObj = null;
-                        if (randomizeCustomers is JObject jo)
-                            randomizeObj = jo;
-                        else if (randomizeCustomers is Dictionary<string, object> dict)
-                            randomizeObj = JObject.FromObject(dict);
-
-                        if (randomizeObj == null) return result;
-
-                        if (!randomizeObj.TryGetValue("has_any", out var hasAny))
-                            return result;
-
-                        // has_any is an array of arrays, e.g., [["Kyle Cooley Unlocked", "Jessi Waters Unlocked"]]
-                        if (hasAny is JArray outerArray && outerArray.Count > 0)
+                        // Check randomize_customers.has_any for customer connections
+                        if (reqDict.TryGetValue("randomize_customers", out var randomizeCustomers))
                         {
-                            var innerArray = outerArray[0] as JArray;
-                            if (innerArray != null)
+                            JObject customersObj = null;
+                            if (randomizeCustomers is JObject jo)
+                                customersObj = jo;
+                            else if (randomizeCustomers is Dictionary<string, object> dict)
+                                customersObj = JObject.FromObject(dict);
+
+                            if (customersObj != null && customersObj.TryGetValue("has_any", out var hasAny))
                             {
-                                foreach (var item in innerArray)
+                                // has_any is an array of arrays, e.g., [["Kyle Cooley Unlocked", "Jessi Waters Unlocked"]]
+                                if (hasAny is JArray outerArray && outerArray.Count > 0)
                                 {
-                                    string unlockItem = item.ToString();
-                                    // Convert "Kyle Cooley Unlocked" to "Kyle Cooley"
-                                    if (unlockItem.EndsWith(" Unlocked", StringComparison.OrdinalIgnoreCase))
+                                    var innerArray = outerArray[0] as JArray;
+                                    if (innerArray != null)
                                     {
-                                        string customerName = unlockItem.Substring(0, unlockItem.Length - " Unlocked".Length);
-                                        result.Add(customerName);
+                                        foreach (var item in innerArray)
+                                        {
+                                            string unlockItem = item.ToString();
+                                            // Convert "Kyle Cooley Unlocked" to "Kyle Cooley"
+                                            if (unlockItem.EndsWith(" Unlocked", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                string customerName = unlockItem.Substring(0, unlockItem.Length - " Unlocked".Length);
+                                                result.Add(customerName);
+                                            }
+                                        }
                                     }
+                                }
+                            }
+                        }
+
+                        // Check randomize_dealers.has for dealer connections
+                        if (reqDict.TryGetValue("randomize_dealers", out var randomizeDealers))
+                        {
+                            JObject dealersObj = null;
+                            if (randomizeDealers is JObject jo)
+                                dealersObj = jo;
+                            else if (randomizeDealers is Dictionary<string, object> dict)
+                                dealersObj = JObject.FromObject(dict);
+
+                            if (dealersObj != null && dealersObj.TryGetValue("has", out var hasDealer))
+                            {
+                                string dealerItem = hasDealer.ToString();
+                                // Convert "Jane Lucero Recruited" to "Jane Lucero"
+                                if (dealerItem.EndsWith(" Recruited", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string dealerName = dealerItem.Substring(0, dealerItem.Length - " Recruited".Length);
+                                    result.Add(dealerName);
+                                }
+                            }
+                        }
+
+                        // Check randomize_suppliers.has for supplier connections
+                        if (reqDict.TryGetValue("randomize_suppliers", out var randomizeSuppliers))
+                        {
+                            JObject suppliersObj = null;
+                            if (randomizeSuppliers is JObject jo)
+                                suppliersObj = jo;
+                            else if (randomizeSuppliers is Dictionary<string, object> dict)
+                                suppliersObj = JObject.FromObject(dict);
+
+                            if (suppliersObj != null && suppliersObj.TryGetValue("has", out var hasSupplier))
+                            {
+                                string supplierItem = hasSupplier.ToString();
+                                // Convert "Salvador Moreno Unlocked" to "Salvador Moreno"
+                                if (supplierItem.EndsWith(" Unlocked", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string supplierName = supplierItem.Substring(0, supplierItem.Length - " Unlocked".Length);
+                                    result.Add(supplierName);
                                 }
                             }
                         }

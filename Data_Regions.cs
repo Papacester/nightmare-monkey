@@ -46,7 +46,7 @@ namespace Narcopelago
 
         /// <summary>
         /// Checks if a customer's sample location is "in logic" for randomize_level_unlocks.
-        /// Uses the location's own randomize_level_unlocks requirements from locations.json.
+        /// Checks both the location's requirements AND the region access requirements.
         /// When Randomize_level_unlocks is false, all customers are considered in logic.
         /// </summary>
         /// <param name="customerName">The customer's full name</param>
@@ -66,15 +66,115 @@ namespace Narcopelago
             if (location == null)
                 return true;
 
-            // Check the randomize_level_unlocks requirements on the location
+            // Check the randomize_level_unlocks requirements on the location itself
             var reqDict = location.GetRequirementsDict();
-            if (reqDict == null)
-                return true; // No requirements, always in logic
+            if (reqDict != null && reqDict.TryGetValue("randomize_level_unlocks", out var levelUnlockReqs))
+            {
+                if (!CheckLevelUnlockRequirements(levelUnlockReqs))
+                    return false; // Location requirements not met
+            }
 
-            if (!reqDict.TryGetValue("randomize_level_unlocks", out var levelUnlockReqs))
-                return true; // No level unlock requirements
+            // Also check if the customer's region is accessible
+            // This is important for regions like Suburbia that don't have level unlock requirements on locations
+            // but require going through Docks (which requires Fertilizer Unlock)
+            string regionName = location.Region;
+            if (!string.IsNullOrEmpty(regionName))
+            {
+                bool regionAccessible = IsRegionAccessibleForLevelUnlocks(regionName);
+                if (!regionAccessible)
+                {
+                    MelonLoader.MelonLogger.Msg($"[Regions] Customer '{customerName}' is out of logic - region '{regionName}' not accessible");
+                    return false; // Region not accessible
+                }
+            }
 
-            return CheckLevelUnlockRequirements(levelUnlockReqs);
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if a region is accessible based on randomize_level_unlocks requirements.
+        /// Uses BFS to traverse from Overworld to the target region, checking level unlock requirements on connections.
+        /// </summary>
+        /// <param name="targetRegion">The region to check accessibility for</param>
+        /// <returns>True if the region is accessible with current level unlocks</returns>
+        public static bool IsRegionAccessibleForLevelUnlocks(string targetRegion)
+        {
+            if (Regions == null)
+                return true;
+
+            // Special case: Overworld and starting regions are always accessible
+            if (string.Equals(targetRegion, "Overworld", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(targetRegion, "Welcome to Hyland Point", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(targetRegion, "Northtown", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // Start from Overworld and traverse using BFS
+            var queue = new Queue<string>();
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var blockedConnections = new List<string>();
+
+            queue.Enqueue("Overworld");
+            visited.Add("Overworld");
+
+            while (queue.Count > 0)
+            {
+                string currentRegion = queue.Dequeue();
+
+                // Found the target region
+                if (string.Equals(currentRegion, targetRegion, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Get connections from this region
+                var region = GetRegion(currentRegion);
+                if (region?.Connections == null)
+                    continue;
+
+                foreach (var kvp in region.Connections)
+                {
+                    string connectedRegion = kvp.Key;
+
+                    // Skip if already visited
+                    if (visited.Contains(connectedRegion))
+                        continue;
+
+                    // Check if this connection requires level unlocks
+                    bool connectionAccessible = true;
+                    if (kvp.Value is JObject connectionReqs)
+                    {
+                        // Check if there's a randomize_level_unlocks requirement for this connection
+                        if (connectionReqs.TryGetValue("randomize_level_unlocks", out var levelUnlockReqs))
+                        {
+                            connectionAccessible = CheckLevelUnlockRequirements(levelUnlockReqs);
+                            if (!connectionAccessible)
+                            {
+                                blockedConnections.Add($"{currentRegion} -> {connectedRegion}");
+                            }
+                        }
+                    }
+                    else if (kvp.Value is bool boolValue)
+                    {
+                        connectionAccessible = boolValue;
+                    }
+
+                    // Only traverse if connection is accessible
+                    if (connectionAccessible)
+                    {
+                        queue.Enqueue(connectedRegion);
+                        visited.Add(connectedRegion);
+                    }
+                }
+            }
+
+            // Target region not found in traversal - not accessible
+            if (blockedConnections.Count > 0)
+            {
+                MelonLoader.MelonLogger.Msg($"[Regions] Region '{targetRegion}' not accessible - blocked connections: {string.Join(", ", blockedConnections)}");
+            }
+            return false;
         }
 
         /// <summary>

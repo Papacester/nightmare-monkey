@@ -56,7 +56,7 @@ config file.
  - Level up rewards are suppressed when randomize_level_up_rewards is true
  - Level up rewards are added to the item pool when randomize_level_up_rewards is true
  - Whenever you'd nomrally get unlocks for leveling up, you get a check regardless of the option
- - Deathlink is sent when a player dies or when they arrested. Recieved deathlink causes player to get arrested
+ - Deathlink is sent when a player dies or when they arrested. Recieved deathlink causes player to get sent to the hospital by default. Other options are available.
  - Property and busniesses give checks when purchased
  - Randomized properties or businesses will not be unlocked when purchased if randomization on, properties and/or businesses will be added to the item pool
  - Recipe checks are sent when recipes are learned
@@ -69,6 +69,14 @@ config file.
 Use In-Game UI to connect to server. Once connected, Create a new world and skip the prologue.
 Make sure to save as often as you can, and you are able to rejoin. Restart your game if you need to rejoin the world!
 If you want to play with friends (Untested): Invite them to your lobby. All of you connect as same archipelago Info, Load into world.
+
+## Tracker: Use the Pop Tracker!
+[Poptracker by Razgriz](https://github.com/RazgrizEast/schedule-1-poptracker-razgriz/releases/latest)
+
+## Multiplayer
+Everyone connect using AP as same player/yaml name. 
+Known issue: People who aren't host will have fillers within AP app too, so they'll be duplicate.
+Suggestion is to not collect fillers if you are not the host.
 
 ## A statement on the ownership over Schedule1AP
 
