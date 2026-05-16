@@ -1,7 +1,5 @@
 using HarmonyLib;
-using Il2CppScheduleOne.UI.MainMenu;
 using MelonLoader;
-using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -9,7 +7,6 @@ using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Enums;
 using System;
 using System.Threading.Tasks;
-using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 
 namespace Narcopelago
 {
@@ -21,19 +18,19 @@ namespace Narcopelago
         public static string LastSlotName { get; private set; }
         public static string LastPassword { get; private set; }
         public static ArchipelagoSession CurrentSession { get; private set; }
-        
+
         // Function to handle connection logic
         public static async void HandleConnect(string host, int port, string slotName, string password)
         {
             MelonLogger.Msg("Connecting to " + host + ":" + port + " as " + slotName);
-            
+
             // Validate inputs first
             if (string.IsNullOrWhiteSpace(host))
             {
                 NarcopelagoUI.SetConnectionStatus(false, "Error: Host cannot be empty");
                 return;
             }
-            
+
             if (string.IsNullOrWhiteSpace(slotName))
             {
                 NarcopelagoUI.SetConnectionStatus(false, "Error: Slot name cannot be empty");
@@ -45,16 +42,16 @@ namespace Narcopelago
                 NarcopelagoUI.SetConnectionStatus(false, "Error: Invalid port number");
                 return;
             }
-            
+
             try
             {
                 var session = ArchipelagoSessionFactory.CreateSession(host, port);
                 // Try to connect with a timeout
                 var connectTask = session.ConnectAsync();
                 var timeoutTask = Task.Delay(10000); // 10 second timeout
-                
+
                 var completedTask = await Task.WhenAny(connectTask, timeoutTask);
-                
+
                 if (completedTask == timeoutTask)
                 {
                     MelonLogger.Error("Connection timed out");
@@ -69,9 +66,9 @@ namespace Narcopelago
                     NarcopelagoUI.SetConnectionStatus(false, "Error: Could not reach server");
                     return;
                 }
-                
+
                 LoginResult result = await session.LoginAsync("Schedule I", slotName, ItemsHandlingFlags.AllItems, password: password);
-                
+
                 if (result.Successful)
                 {
                     MelonLogger.Msg("Connected to Archipelago!");
@@ -108,13 +105,16 @@ namespace Narcopelago
 
                     // Initialize item receiving - this will process starting items
                     NarcopelagoItems.Initialize(session);
-                    
+
                     // Initialize save system - loads claimed counts from disk
                     // Sync will happen when entering game scene (after delay for AP items to replay)
                     NarcopelagoSave.Initialize();
-                    
+
                     // Subscribe to Archipelago message events for phone contacts
                     NarcopelagoAPContacts.SubscribeToEvents(session);
+
+                    NarcopelagoConfig.Save(LastHost, LastPort, LastSlotName, LastPassword);
+
                 }
                 else
                 {
@@ -142,13 +142,13 @@ namespace Narcopelago
     {
         public static GameObject PanelInstance;
         public static Text StatusText;
-        
+
         // Store input field references
         public static InputField HostField;
         public static InputField PortField;
         public static InputField SlotNameField;
         public static InputField PasswordField;
-        
+
         // Easy access to current values
         public static string Host => HostField?.text ?? "";
         public static int Port => int.TryParse(PortField?.text, out int p) ? p : 38281;
@@ -172,13 +172,13 @@ namespace Narcopelago
 
             var canvas = GameObject.FindObjectOfType<Canvas>();
             GameObject panel = NarcopelagoUI.CreatePanel(canvas.transform);
-            
+
 
             Schedule1PanelManager.PanelInstance = panel;
             panel.SetActive(true);
         }
     }
 
-    
+
 }
 
