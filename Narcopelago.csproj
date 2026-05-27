@@ -516,6 +516,7 @@
 		<Compile Include="NarcopelagoBundles.cs" />
 		<Compile Include="NarcopelagoCartelInfluence.cs" />
 		<Compile Include="NarcopelagoCashForTrash.cs" />
+		<Compile Include="NarcopelagoConfig.cs" />
 		<Compile Include="NarcopelagoCustomers.cs" />
 		<Compile Include="NarcopelagoDealers.cs" />
 		<Compile Include="NarcopelagoDeathLink.cs" />
