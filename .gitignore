@@ -427,3 +427,6 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /assembly-csharp
+
+lib/
+*.csproj

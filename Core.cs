@@ -1,19 +1,6 @@
-﻿using Archipelago.MultiClient.Net;
-using Archipelago.MultiClient.Net.Enums;
-using HarmonyLib;
-using JetBrains.Annotations;
-using MelonLoader;
-using Il2CppScheduleOne.Dialogue;
-using Il2CppScheduleOne.Economy;
-using Il2CppScheduleOne.NPCs;
-using Il2CppScheduleOne.NPCs.Relation;
-using Il2CppScheduleOne.Persistence;
-using Il2CppScheduleOne.PlayerScripts;
+﻿using MelonLoader;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
-using UnityEngine.SceneManagement;
 
 [assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.5.3", "Papacestor, MacH8s", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -40,86 +27,87 @@ namespace Narcopelago
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Narcopelago v" + Info.Version + " loaded!");
-            
+
             // Load JSON data files
             LoadDataFiles();
-            
+
             // Subscribe to connect button - connection happens when user clicks Connect
-                NarcopelagoUI.OnConnectClicked += ConnectionHandler.HandleConnect;
-            }
+            NarcopelagoUI.OnConnectClicked += ConnectionHandler.HandleConnect;
+            NarcopelagoConfig.Initalize();
+        }
 
-            public override void OnUpdate()
-            {
-                // Process any queued customer unlocks on the main thread
-                // This is necessary because Archipelago callbacks run on background threads,
-                // but Unity/IL2CPP operations must run on the main thread
-                NarcopelagoCustomers.ProcessMainThreadQueue();
-                
-                // Process any queued dealer recruitments on the main thread
-                NarcopelagoDealers.ProcessMainThreadQueue();
-                
-                // Process any queued supplier unlocks on the main thread
-                NarcopelagoSuppliers.ProcessMainThreadQueue();
-                
-                // Process any queued cartel influence changes on the main thread
-                NarcopelagoCartelInfluence.ProcessMainThreadQueue();
-                
-                // Process any queued level up checks on the main thread
-                NarcopelagoLevels.ProcessMainThreadQueue();
-                
-                // Process any queued DeathLink deaths on the main thread
-                NarcopelagoDeathLink.ProcessMainThreadQueue();
-                
-                // Process goal checking on the main thread
-                NarcopelagoGoal.ProcessMainThreadQueue();
-                
-                // Process any queued Archipelago phone messages on the main thread
-                NarcopelagoAPContacts.ProcessMainThreadQueue();
-                
-                // Process any queued cash-for-trash location checks on the main thread
-                NarcopelagoCashForTrash.ProcessMainThreadQueue();
-                
-                // Process any queued recipe check locations on the main thread
-                NarcopelagoRecipeChecks.ProcessMainThreadQueue();
-                
-                // Process any queued property/business unlocks on the main thread
-                NarcopelagoRealtor.ProcessMainThreadQueue();
-                
-                // Process any queued filler item dead drops on the main thread
-                NarcopelagoFillers.ProcessMainThreadQueue();
-            
-                // Process any queued trap effects on the main thread
-                NarcopelagoTraps.ProcessMainThreadQueue();
-                
-                // Process sewer-related operations on the main thread
-                NarcopelagoSewer.ProcessMainThreadQueue();
-            
-                // Process save system (delayed sync of claimable items)
-                NarcopelagoSave.ProcessMainThreadQueue();
-                
-                // Check for Archipelago disconnection and handle save + exit
-                NarcopelagoDisconnect.ProcessMainThreadQueue();
-                
-                // Update networth display UI
-                NarcopelagoNetworthDisplay.ProcessMainThreadQueue();
-                
-                // Debug: message stress test keybind ('-' to toggle)
-                // NarcopelagoMessageStressTest.Update();
-            
-                // Handle Tab key navigation for main menu input fields
-                NarcopelagoUI.HandleTabNavigation();
-            }
+        public override void OnUpdate()
+        {
+            // Process any queued customer unlocks on the main thread
+            // This is necessary because Archipelago callbacks run on background threads,
+            // but Unity/IL2CPP operations must run on the main thread
+            NarcopelagoCustomers.ProcessMainThreadQueue();
 
-            public override void OnGUI()
-            {
-                // Draw the networth display using Unity's immediate mode GUI
-                NarcopelagoNetworthDisplay.OnGUI();
-            }
+            // Process any queued dealer recruitments on the main thread
+            NarcopelagoDealers.ProcessMainThreadQueue();
 
-            public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-            {
-                LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
-            
+            // Process any queued supplier unlocks on the main thread
+            NarcopelagoSuppliers.ProcessMainThreadQueue();
+
+            // Process any queued cartel influence changes on the main thread
+            NarcopelagoCartelInfluence.ProcessMainThreadQueue();
+
+            // Process any queued level up checks on the main thread
+            NarcopelagoLevels.ProcessMainThreadQueue();
+
+            // Process any queued DeathLink deaths on the main thread
+            NarcopelagoDeathLink.ProcessMainThreadQueue();
+
+            // Process goal checking on the main thread
+            NarcopelagoGoal.ProcessMainThreadQueue();
+
+            // Process any queued Archipelago phone messages on the main thread
+            NarcopelagoAPContacts.ProcessMainThreadQueue();
+
+            // Process any queued cash-for-trash location checks on the main thread
+            NarcopelagoCashForTrash.ProcessMainThreadQueue();
+
+            // Process any queued recipe check locations on the main thread
+            NarcopelagoRecipeChecks.ProcessMainThreadQueue();
+
+            // Process any queued property/business unlocks on the main thread
+            NarcopelagoRealtor.ProcessMainThreadQueue();
+
+            // Process any queued filler item dead drops on the main thread
+            NarcopelagoFillers.ProcessMainThreadQueue();
+
+            // Process any queued trap effects on the main thread
+            NarcopelagoTraps.ProcessMainThreadQueue();
+
+            // Process sewer-related operations on the main thread
+            NarcopelagoSewer.ProcessMainThreadQueue();
+
+            // Process save system (delayed sync of claimable items)
+            NarcopelagoSave.ProcessMainThreadQueue();
+
+            // Check for Archipelago disconnection and handle save + exit
+            NarcopelagoDisconnect.ProcessMainThreadQueue();
+
+            // Update networth display UI
+            NarcopelagoNetworthDisplay.ProcessMainThreadQueue();
+
+            // Debug: message stress test keybind ('-' to toggle)
+            // NarcopelagoMessageStressTest.Update();
+
+            // Handle Tab key navigation for main menu input fields
+            NarcopelagoUI.HandleTabNavigation();
+        }
+
+        public override void OnGUI()
+        {
+            // Draw the networth display using Unity's immediate mode GUI
+            NarcopelagoNetworthDisplay.OnGUI();
+        }
+
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            LoggerInstance.Msg($"Scene loaded: {sceneName} (index: {buildIndex})");
+
             // Track if we're in a game scene
             bool isGameScene = sceneName != "Menu" && sceneName != "Bootstrap" && sceneName != "Loading";
             NarcopelagoCustomers.SetInGameScene(isGameScene);
@@ -138,7 +126,7 @@ namespace Narcopelago
             NarcopelagoDisconnect.SetInGameScene(isGameScene);
             NarcopelagoSave.SetInGameScene(isGameScene);
             NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
-            
+
             // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago
             if (isGameScene && NarcopelagoItems.IsInitialized)
             {
@@ -154,7 +142,7 @@ namespace Narcopelago
                 NarcopelagoRealtor.SyncFromSession();
                 NarcopelagoSewer.SyncFromSession();
             }
-            }
+        }
 
         private void LoadDataFiles()
         {
@@ -217,7 +205,7 @@ namespace Narcopelago
                     LoggerInstance.Warning($"regions.json not found at: {regionsPath}");
                 }
 
-                DataLoaded = Data_Locations.Locations != null && 
+                DataLoaded = Data_Locations.Locations != null &&
                              Data_Items.Items != null &&
                              Data_Regions.Regions != null;
 

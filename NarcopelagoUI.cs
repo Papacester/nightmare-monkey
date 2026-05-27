@@ -1,12 +1,7 @@
 ﻿using MelonLoader;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Narcopelago
@@ -427,6 +422,13 @@ namespace Narcopelago
                 NarcopelagoAPContacts.MuteAllMessages = isOn;
                 MelonLogger.Msg($"[UI] Mute AP Global Messages: {isOn}");
             }));
+
+            var lastConnectionInfo = NarcopelagoConfig.Load();
+
+            hostField.text = lastConnectionInfo.host;
+            portField.text = lastConnectionInfo.port.ToString();
+            nameField.text = lastConnectionInfo.slotName;
+            passField.text = lastConnectionInfo.password;
 
             Schedule1PanelManager.StatusText = statusText;
             Schedule1PanelManager.HostField = hostField;
