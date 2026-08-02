@@ -350,7 +350,7 @@ namespace Narcopelago
                     if (supplier == null) continue;
                     supplierCount++;
 
-                    string name = supplier.fullName ?? supplier.FirstName ?? "";
+                    string name = supplier.FullName ?? supplier.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, supplierName))
                     {
                         MelonLogger.Msg($"[Suppliers] Found supplier '{name}' (Unlocked: {supplier.RelationData?.Unlocked}, IsKnown: {supplier.RelationData?.IsKnown()})");
@@ -404,7 +404,7 @@ namespace Narcopelago
                     var supplier = npc.TryCast<Supplier>();
                     if (supplier == null) continue;
 
-                    string name = supplier.fullName ?? supplier.FirstName ?? "";
+                    string name = supplier.FullName ?? supplier.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, supplierName))
                     {
                         return supplier.RelationData?.Unlocked ?? false;
@@ -455,7 +455,7 @@ namespace Narcopelago
                         return true; // Let original handle null case
                     }
 
-                    string supplierName = supplier.fullName ?? supplier.FirstName ?? "Unknown";
+                    string supplierName = supplier.FullName ?? supplier.FirstName ?? "Unknown";
                     MelonLogger.Msg($"[PATCH] RecommendSupplier called for '{supplierName}'");
 
                     // Albert Hoover is the default supplier - don't interfere
@@ -524,7 +524,7 @@ namespace Narcopelago
             {
                 try
                 {
-                    string supplierName = __instance.fullName ?? __instance.FirstName ?? "Unknown";
+                    string supplierName = __instance.FullName ?? __instance.FirstName ?? "Unknown";
 
                     // Albert Hoover is the default supplier - don't interfere
                     if (supplierName.Equals("Albert Hoover", StringComparison.OrdinalIgnoreCase))

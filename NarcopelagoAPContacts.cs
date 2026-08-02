@@ -470,7 +470,7 @@ namespace Narcopelago
                     return;
                 }
 
-                MelonLogger.Msg($"[APContacts] Using NPC '{_fakeContactNPC.fullName}' as base for AP contacts");
+                MelonLogger.Msg($"[APContacts] Using NPC '{_fakeContactNPC.FullName}' as base for AP contacts");
 
                 // Create the "Archipelago" contact conversation
                 _allMessagesConversation = CreateAPConversation(_fakeContactNPC, CONTACT_ALL);

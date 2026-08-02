@@ -406,7 +406,7 @@ namespace Narcopelago
                 {
                     if (dealer == null) continue;
 
-                    string name = dealer.fullName ?? dealer.FirstName ?? "";
+                    string name = dealer.FullName ?? dealer.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, dealerName))
                     {
                         if (!dealer.IsRecruited)
@@ -453,7 +453,7 @@ namespace Narcopelago
                 {
                     if (dealer == null) continue;
 
-                    string name = dealer.fullName ?? dealer.FirstName ?? "";
+                    string name = dealer.FullName ?? dealer.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, dealerName))
                     {
                         return dealer.IsRecruited;
@@ -576,7 +576,7 @@ namespace Narcopelago
             {
                 if (dealer == null) continue;
 
-                string dealerName = dealer.fullName ?? dealer.FirstName ?? "";
+                string dealerName = dealer.FullName ?? dealer.FirstName ?? "";
                 if (string.IsNullOrEmpty(dealerName)) continue;
 
                 bool shouldShow = ShouldShowDealerPOI(dealerName, dealer);
@@ -655,7 +655,7 @@ namespace Narcopelago
                     return true;
                 }
 
-                string dealerName = __instance.fullName ?? __instance.FirstName ?? "";
+                string dealerName = __instance.FullName ?? __instance.FirstName ?? "";
                 if (string.IsNullOrEmpty(dealerName))
                 {
                     return true;
@@ -704,7 +704,7 @@ namespace Narcopelago
             {
                 try
                 {
-                    string dealerName = __instance.fullName ?? __instance.FirstName ?? "Unknown";
+                    string dealerName = __instance.FullName ?? __instance.FirstName ?? "Unknown";
 
                     // Benji Coleman is the tutorial dealer - don't interfere
                     if (dealerName.Equals("Benji Coleman", StringComparison.OrdinalIgnoreCase))
@@ -779,7 +779,7 @@ namespace Narcopelago
         {
             try
             {
-                string dealerName = __instance.fullName ?? __instance.FirstName ?? "";
+                string dealerName = __instance.FullName ?? __instance.FirstName ?? "";
                 if (string.IsNullOrEmpty(dealerName)) return;
 
                 // Benji Coleman is the tutorial dealer - don't interfere

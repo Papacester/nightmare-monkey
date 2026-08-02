@@ -156,12 +156,14 @@ namespace Narcopelago
         public static string Password => PasswordField?.text ?? "";
     }
 
-    [HarmonyPatch(typeof(Il2CppScheduleOne.UI.MainMenu.MainMenuScreen), "Awake")]
-    public class MainMenuScreen_Awake_Patch
+    // Schedule I 0.4.6 renamed MainMenuScreen to MenuScreen. Awake is still the
+    // protected virtual base method, so every menu screen still runs through here.
+    [HarmonyPatch(typeof(Il2CppScheduleOne.UI.MainMenu.MenuScreen), "Awake")]
+    public class MenuScreen_Awake_Patch
     {
-        static void Postfix(Il2CppScheduleOne.UI.MainMenu.MainMenuScreen __instance)
+        static void Postfix(Il2CppScheduleOne.UI.MainMenu.MenuScreen __instance)
         {
-            MelonLogger.Msg("Scene during MainMenuScreen.Awake: " + SceneManager.GetActiveScene().name);
+            MelonLogger.Msg("Scene during MenuScreen.Awake: " + SceneManager.GetActiveScene().name);
 
             // Only create panel in the real main menu
             if (SceneManager.GetActiveScene().name != "Menu")
@@ -171,8 +173,15 @@ namespace Narcopelago
                 return;
 
             var canvas = GameObject.FindObjectOfType<Canvas>();
-            GameObject panel = NarcopelagoUI.CreatePanel(canvas.transform);
+            if (canvas == null)
+            {
+                MelonLogger.Warning("No Canvas found in Menu scene; deferring panel creation.");
+                return;
+            }
 
+            GameObject panel = NarcopelagoUI.CreatePanel(canvas.transform);
+            if (panel == null)
+                return;
 
             Schedule1PanelManager.PanelInstance = panel;
             panel.SetActive(true);
