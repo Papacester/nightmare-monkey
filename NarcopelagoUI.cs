@@ -91,6 +91,18 @@ namespace Narcopelago
             if (GameObject.Find("Schedule1Panel") != null)
                 return GameObject.Find("Schedule1Panel");
 
+            // 0.4.6 reworked the menu hierarchy, so the "MainMenu" GameObject is no
+            // longer guaranteed. Fall back to the canvas the caller resolved for us.
+            GameObject canvas = GameObject.Find("MainMenu");
+            Transform panelParent = canvas != null ? canvas.transform : parent;
+            MelonLogger.Msg($"Panel parent: {(panelParent != null ? panelParent.name : "<none>")}");
+
+            if (panelParent == null)
+            {
+                MelonLogger.Error("Could not resolve a parent for Schedule1Panel; skipping creation.");
+                return null;
+            }
+
             GameObject panel = new GameObject("Schedule1Panel");
             RectTransform rect = panel.AddComponent<RectTransform>();
             CanvasRenderer renderer = panel.AddComponent<CanvasRenderer>();
@@ -103,9 +115,7 @@ namespace Narcopelago
             rect.sizeDelta = new Vector2(400, 300);
             rect.anchoredPosition = new Vector2(-40f, 40f);
 
-            GameObject canvas = GameObject.Find("MainMenu"); // adjust name if needed
-            MelonLogger.Msg("Canvas found: " + (canvas != null));
-            panel.transform.SetParent(canvas.transform, false);
+            panel.transform.SetParent(panelParent, false);
 
             GameObject titleGO = new GameObject("Title");
             titleGO.transform.SetParent(panel.transform, false);

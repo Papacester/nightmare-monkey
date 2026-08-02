@@ -347,7 +347,7 @@ namespace Narcopelago
                 {
                     if (customer == null || customer.NPC == null) continue;
                     
-                    string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                    string name = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, customerName))
                     {
                         // Customer is already in UnlockedCustomers list
@@ -370,7 +370,7 @@ namespace Narcopelago
                 {
                     if (customer == null || customer.NPC == null) continue;
                     
-                    string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                    string name = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                     if (StringHelper.EqualsNormalized(name, customerName))
                     {
                         var relationData = customer.NPC.RelationData;
@@ -543,7 +543,7 @@ namespace Narcopelago
                     foreach (var customer in Customer.UnlockedCustomers)
                     {
                         if (customer == null || customer.NPC == null) continue;
-                        string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                        string name = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                         if (StringHelper.EqualsNormalized(name, customerName))
                         {
                             return true;
@@ -554,7 +554,7 @@ namespace Narcopelago
                     foreach (var customer in Customer.LockedCustomers)
                     {
                         if (customer == null || customer.NPC == null) continue;
-                        string name = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                        string name = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                         if (StringHelper.EqualsNormalized(name, customerName))
                         {
                             // Found in locked list - check actual RelationData in case lists are stale
@@ -718,7 +718,7 @@ namespace Narcopelago
                         var customer = Customer.LockedCustomers[i];
                         if (customer == null || customer.NPC == null) continue;
 
-                        string customerName = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                        string customerName = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                         if (string.IsNullOrEmpty(customerName)) continue;
 
                         bool canBeSampled = CanCustomerBeSampled(customerName);
@@ -744,7 +744,7 @@ namespace Narcopelago
                         var customer = Customer.UnlockedCustomers[i];
                         if (customer == null || customer.NPC == null) continue;
 
-                        string customerName = customer.NPC.fullName ?? customer.NPC.FirstName ?? "";
+                        string customerName = customer.NPC.FullName ?? customer.NPC.FirstName ?? "";
                         if (string.IsNullOrEmpty(customerName)) continue;
 
                         bool canBeSampled = CanCustomerBeSampled(customerName);
@@ -923,7 +923,7 @@ namespace Narcopelago
                     if (!enabled) return;
 
                     // Get customer name
-                    string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "";
+                    string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "";
                     if (string.IsNullOrEmpty(customerName)) return;
 
                     // Check if customer has already completed their sample location check
@@ -1013,7 +1013,7 @@ namespace Narcopelago
         {
             try
             {
-                string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "";
+                string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "";
                 if (string.IsNullOrEmpty(customerName))
                 {
                     // Let original method handle it
@@ -1124,7 +1124,7 @@ namespace Narcopelago
                     }
 
                     // Original blocked due to connections or region check - see if we should override
-                    string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "";
+                    string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "";
                     if (string.IsNullOrEmpty(customerName)) return;
 
                     // Check Archipelago eligibility
@@ -1193,7 +1193,7 @@ namespace Narcopelago
                     {
                         try
                         {
-                            string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "";
+                            string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "";
                             if (string.IsNullOrEmpty(customerName))
                             {
                                 MelonLogger.Warning("[PATCH] SampleConsumed - Could not get customer name");
@@ -1277,7 +1277,7 @@ namespace Narcopelago
                         {
                             try
                             {
-                                string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "Unknown";
+                                string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "Unknown";
 
                                 // If this is an Archipelago-initiated unlock, always allow it
                                 if (_isArchipelagoUnlock)
@@ -1365,7 +1365,7 @@ namespace Narcopelago
                                     return true;
                                 }
 
-                                string customerName = __instance.NPC?.fullName ?? __instance.NPC?.FirstName ?? "";
+                                string customerName = __instance.NPC?.FullName ?? __instance.NPC?.FirstName ?? "";
                                 if (string.IsNullOrEmpty(customerName))
                                 {
                                     return true; // Let original handle it
