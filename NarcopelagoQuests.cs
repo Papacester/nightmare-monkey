@@ -196,7 +196,7 @@ namespace Narcopelago
         /// </summary>
         /// <param name="input">The input string potentially containing parentheses.</param>
         /// <returns>The string with all parenthetical content removed and extra spaces cleaned up.</returns>
-        private static string StripParentheticalContent(string input)
+        internal static string StripParentheticalContent(string input)
         {
             if (string.IsNullOrEmpty(input))
                 return input;

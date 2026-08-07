@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.5.6", "Papacestor, MacH8s, IViscosity", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.5.7", "Papacestor, MacH8s, IViscosity", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
@@ -85,6 +85,9 @@ namespace Narcopelago
             // Process save system (delayed sync of claimable items)
             NarcopelagoSave.ProcessMainThreadQueue();
 
+            // Watchdog for quests the game left in an unprogressable state
+            NarcopelagoQuestRepair.ProcessMainThreadQueue();
+
             // Check for Archipelago disconnection and handle save + exit
             NarcopelagoDisconnect.ProcessMainThreadQueue();
 
@@ -125,6 +128,7 @@ namespace Narcopelago
             NarcopelagoSewer.SetInGameScene(isGameScene);
             NarcopelagoDisconnect.SetInGameScene(isGameScene);
             NarcopelagoSave.SetInGameScene(isGameScene);
+            NarcopelagoQuestRepair.SetInGameScene(isGameScene);
             NarcopelagoNetworthDisplay.SetInGameScene(isGameScene);
 
             // When entering a game scene, sync customer/dealer/supplier unlocks from Archipelago

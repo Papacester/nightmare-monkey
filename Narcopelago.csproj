@@ -531,6 +531,7 @@
 		<Compile Include="NarcopelagoMessageStressTest.cs" />
 		<Compile Include="NarcopelagoNetworthDisplay.cs" />
 		<Compile Include="NarcopelagoOptions.cs" />
+		<Compile Include="NarcopelagoQuestRepair.cs" />
 		<Compile Include="NarcopelagoQuests.cs" />
 		<Compile Include="NarcopelagoRealtor.cs" />
 		<Compile Include="NarcopelagoRecipeChecks.cs" />
