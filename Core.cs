@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.5.7", "Papacestor, MacH8s, IViscosity", null)]
+[assembly: MelonInfo(typeof(Narcopelago.Core), "Narcopelago", "1.5.8", "Papacestor, MacH8s, IViscosity", null)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace Narcopelago
