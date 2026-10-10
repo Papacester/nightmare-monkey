@@ -555,9 +555,9 @@ namespace Narcopelago
             {
                 MelonLogger.Msg($"[APContacts] Creating conversation for '{contactName}'...");
                 
-                // Create a new MSGConversation with our custom contact name
-                // Note: This registers with MessagingManager using the NPC, but uses our custom name
-                var conversation = new MSGConversation(npc, contactName);
+                // Game 0.4.6+: MSGConversation takes a MessageContactInfo plus a conversation ID
+                var contact = new MessageContactInfo(contactName, "", npc.MugshotSprite, false, false);
+                var conversation = new MSGConversation(contact, contactName);
                 
                 MelonLogger.Msg($"[APContacts] Conversation created, ensuring UI exists...");
                 
